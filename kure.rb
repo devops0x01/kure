@@ -9,11 +9,12 @@ class Kure
 	
 
   def initialize()
-    #If .kure exist, attempt to load the repository.
+    # If .kure exist, attempt to load the repository.
   end
   
   ## Create a new repository in .kure if it doesn't exist.
   ## If it already exists, show an error and exit.
+	## TODO: complete functionality
   def create(name)
     Dir.mkdir(REPOSITORY_DIR)
 		Dir.mkdir(REPOSITORY_DATA_DIR)
@@ -23,19 +24,25 @@ class Kure
   
   def add(items)
 	  ## Add the indicated items to the repository's pending list
+		f = File.open(PENDING_FILE,"w+")
     items.each do |i|
 		  if File.exists?(i) then
-				f = File.open(PENDING_FILE,"w+")
 				f.puts(i)
-				f.close()
-				return true
 			else
+				## TODO: file does not exist, omitting
+				## TODO: should I truncate the pending list here?
+				f.close()
 				return false
 			end
 		end
+		f.close()
+		return true
   end
   
   def commit(options=nil)
+		## TODO: compare files so that files which match the last version
+		##       are only committed if confirmed
+	
 		## Foreach pending file rename the existing copy in data
 		## and then copy in the new one. This is an extremely inefficient
 		## method for versioning files and is only a place holder at this time.
@@ -80,8 +87,14 @@ class Kure
 			File.truncate(PENDING_FILE,0)
 			return true
 		else
-			##TODO: Success was false, so delete any staged files
-
+			## Success was false, so delete any staged files as part of roll back.
+			## TODO: how should I handle the pending list here?
+			entries = Dir.entries(REPOSITORY_STAGING_DIR)
+			entries.delete("..")
+			entries.delete(".")			
+			entries.each do |e|
+				FileUtils.rm("#{REPOSITORY_STAGING_DIR}/#{e}")
+			end
 			return false
 		end
   end
