@@ -1,9 +1,10 @@
 require "fileutils"
+require "yaml"
 
 ## Versioning commands are implemented here.
 class Kure
   REPOSITORY_DIR         = ".kure"
-  REPOSITORY_DATA_DIR    = "#{REPOSITORY_DIR}/data"
+  REPOSITORY_VERSIONS_DIR    = "#{REPOSITORY_DIR}/versions"
   REPOSITORY_STAGING_DIR = "#{REPOSITORY_DIR}/staged"
 
   PENDING_FILE      = "#{REPOSITORY_DIR}/pending"
@@ -28,7 +29,7 @@ class Kure
 	## TODO: complete functionality
   def create(name)
     Dir.mkdir(REPOSITORY_DIR)
-    Dir.mkdir(REPOSITORY_DATA_DIR)
+    Dir.mkdir(REPOSITORY_VERSIONS_DIR)
     Dir.mkdir(REPOSITORY_STAGING_DIR)
     File.new(PENDING_FILE,"w").close
     File.new(META_FILE,"w").close
@@ -90,13 +91,31 @@ class Kure
     if success then
       ## If we successfully copied to staging then we can now move everything
       ## to data.
-			current_version_dir = "#{REPOSITORY_DATA_DIR}/#{@last_version + 1}"
+			current_version_dir = "#{REPOSITORY_VERSIONS_DIR}/#{@last_version + 1}"
 			Dir.mkdir(current_version_dir)
+			Dir.mkdir("#{current_version_dir}/data")
 			## TODO: I think I can move all of these with a glob now...
       files.each do |f|
         f.chomp!
-        FileUtils.mv("#{REPOSITORY_STAGING_DIR}/#{f}","#{current_version_dir}/#{f}")
+        FileUtils.mv("#{REPOSITORY_STAGING_DIR}/#{f}","#{current_version_dir}/data/#{f}")
       end
+
+			## If the last version number was -1 then this is the initial version.
+			## We need to create an image file from scratch. Future commits will start by
+			## loading the last versions image file and edit the data to create the new one.
+		  image = Hash.new
+			unless @last_version == -1 then
+			  image = YAML.load(File.read("#{REPOSITORY_VERSIONS_DIR}/#{@last_version}/image.yaml"))
+			end
+			
+			files.each do |f|
+				image[f] = @last_version + 1
+			end
+			
+			f = File.new("#{current_version_dir}/image.yaml","w")
+			f.print(image.to_yaml)
+			f.close
+			
 			@last_version += 1
 			f = File.open(LAST_VERSION_FILE,"w")
 		  f.print(@last_version)
@@ -115,24 +134,8 @@ class Kure
       end
       return false
     end
-	  ## Add the indicated items to the repository's pending list
-		f = File.open(PENDING_FILE,"w+")
-    items.each do |i|
-		  if File.exists?(i) then
-				f.puts(i)
-			else
-				## TODO: file does not exist, omitting
-				## TODO: should I truncate the pending list here?
-				f.close()
-				return false
-			end
-		end
-		f.close()
-		return true
   end
-  
-  
-  
+
   def get(items=nil)
     
   end
