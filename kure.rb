@@ -12,7 +12,8 @@ class Kure
   
 
   def initialize()
-    # If .kure exist, attempt to load the repository.
+    # TODO: If .kure exist, attempt to load the repository properties file
+		@last_version = -1
   end
   
   ## Create a new repository in .kure if it doesn't exist.
@@ -46,7 +47,8 @@ class Kure
   
   def commit(options=nil)
     ## TODO: compare files so that files which match the last version
-    ##       are only committed if confirmed
+    ##       are only committed if confirmed - or follow gits method and 
+		##       only make modified files available for check in...
   
     ## Foreach pending file rename the existing copy in data
     ## and then copy in the new one. This is an extremely inefficient
@@ -78,16 +80,14 @@ class Kure
     if success then
       ## If we successfully copied to staging then we can now move everything
       ## to data.
-      
-      ## First ensure we don't overwrite the last version.
+			current_version_dir = "#{REPOSITORY_DATA_DIR}/#{@last_version + 1}"
+			Dir.mkdir(current_version_dir)
+			## TODO: I think I can move all of these with a glob now...
       files.each do |f|
         f.chomp!
-        if File.exists?("#{REPOSITORY_DATA_DIR}/#{f}") then
-          FileUtils.mv("#{REPOSITORY_DATA_DIR}/#{f}","#{REPOSITORY_DATA_DIR}/#{f}.#{timestamp()}")
-        end
-        ## Now move in the pending file.
-        FileUtils.mv("#{REPOSITORY_STAGING_DIR}/#{f}","#{REPOSITORY_DATA_DIR}/#{f}")
+        FileUtils.mv("#{REPOSITORY_STAGING_DIR}/#{f}","#{current_version_dir}/#{f}")
       end
+			@last_version += 1
       ## We have completed committing the staged files so clear the pending list.
       File.truncate(PENDING_FILE,0)
       return true
@@ -118,65 +118,7 @@ class Kure
 		return true
   end
   
-  def commit(options=nil)
-		## TODO: compare files so that files which match the last version
-		##       are only committed if confirmed
-	
-		## Foreach pending file rename the existing copy in data
-		## and then copy in the new one. This is an extremely inefficient
-		## method for versioning files and is only a place holder at this time.
-		## A better method is planned for a future iteration.
-		
-		## First copy each file to a staging directory.
-		## If a file is missing, error out and delete the staged files
-		## then return false. This makes for an easy roll back.
-		success = true
-		files = File.readlines(PENDING_FILE)
-		files.each do |f|
-		  f.chomp!
-			if File.exists?(f) then
-				## If it exists we will attempt a copy to staging
-				FileUtils.copy(f,"#{REPOSITORY_STAGING_DIR}/#{f}")
-				unless File.exists?("#{REPOSITORY_STAGING_DIR}/#{f}") then
-				  ## If copy failed then success is set to false and we need to roll back.
-					success = false
-					break
-				end
-			else
-				## If a file indicated by the pending list doesn't exist
-        ## then success is set to false and we need to roll back.
-				success = false
-				break
-			end
-		end
-		if success then
-			## If we successfully copied to staging then we can now move everything
-			## to data.
-			
-			## First ensure we don't overwrite the last version.
-			files.each do |f|
-				f.chomp!
-				if File.exists?("#{REPOSITORY_DATA_DIR}/#{f}") then
-					FileUtils.mv("#{REPOSITORY_DATA_DIR}/#{f}","#{REPOSITORY_DATA_DIR}/#{f}.#{timestamp()}")
-				end
-				## Now move in the pending file.
-				FileUtils.mv("#{REPOSITORY_STAGING_DIR}/#{f}","#{REPOSITORY_DATA_DIR}/#{f}")
-			end
-			## We have completed committing the staged files so clear the pending list.
-			File.truncate(PENDING_FILE,0)
-			return true
-		else
-			## Success was false, so delete any staged files as part of roll back.
-			## TODO: how should I handle the pending list here?
-			entries = Dir.entries(REPOSITORY_STAGING_DIR)
-			entries.delete("..")
-			entries.delete(".")			
-			entries.each do |e|
-				FileUtils.rm("#{REPOSITORY_STAGING_DIR}/#{e}")
-			end
-			return false
-		end
-  end
+  
   
   def get(items=nil)
     

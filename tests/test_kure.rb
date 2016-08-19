@@ -36,15 +36,10 @@ class TestKure < Test::Unit::TestCase
   end
 
   def test_commit()
-    @kure.add(["test.txt"])
-		assert_equal(false,@kure.add(["does_not_exist.txt"]),"test that an attempt to add a non-existent file does not work")
-  end
-
-  def test_commit()
 	  @kure.add(["test.txt"])
     assert_equal(true,@kure.commit(),"testing commit method")
     ## make sure that the pending file ended up in the repository data directory
-    assert_equal(true,File.exists?(".kure/data/test.txt"),"checking that a pending file was committed to the repository")
+    assert_equal(true,File.exists?(".kure/data/0/test.txt"),"checking that a pending file was committed to the repository")
     ## after a commit the pending file should be empty
     assert_equal(0,File.size(".kure/pending"),"checking that the pending file is 0 bytes")
   end
