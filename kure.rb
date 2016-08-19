@@ -6,14 +6,21 @@ class Kure
   REPOSITORY_DATA_DIR    = "#{REPOSITORY_DIR}/data"
   REPOSITORY_STAGING_DIR = "#{REPOSITORY_DIR}/staged"
 
-  PENDING_FILE    = "#{REPOSITORY_DIR}/pending"
-  PROPERTIES_FILE = "#{REPOSITORY_DIR}/properties"
-  META_FILE       = "#{REPOSITORY_DIR}/meta"
+  PENDING_FILE      = "#{REPOSITORY_DIR}/pending"
+  PROPERTIES_FILE   = "#{REPOSITORY_DIR}/properties"
+  META_FILE         = "#{REPOSITORY_DIR}/meta"
+	LAST_VERSION_FILE = "#{REPOSITORY_DIR}/last_version"
   
 
   def initialize()
     # TODO: If .kure exist, attempt to load the repository properties file
-		@last_version = -1
+		if Dir.exists?(REPOSITORY_DIR) then
+			f = File.open(LAST_VERSION_FILE,"r")
+			@last_version = f.read(@last_version).to_i
+			f.close
+		else
+		  @last_version = -1
+		end
   end
   
   ## Create a new repository in .kure if it doesn't exist.
@@ -26,6 +33,9 @@ class Kure
     File.new(PENDING_FILE,"w").close
     File.new(META_FILE,"w").close
     File.new(PROPERTIES_FILE,"w").close
+		f = File.new(LAST_VERSION_FILE,"w")
+		f.print(@last_version)
+		f.close
   end
   
   def add(items)
@@ -88,6 +98,9 @@ class Kure
         FileUtils.mv("#{REPOSITORY_STAGING_DIR}/#{f}","#{current_version_dir}/#{f}")
       end
 			@last_version += 1
+			f = File.open(LAST_VERSION_FILE,"w")
+		  f.print(@last_version)
+		  f.close
       ## We have completed committing the staged files so clear the pending list.
       File.truncate(PENDING_FILE,0)
       return true
