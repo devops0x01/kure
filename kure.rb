@@ -17,11 +17,7 @@ class Kure
   
   ## Create a new repository in .kure if it doesn't exist.
   ## If it already exists, show an error and exit.
-<<<<<<< HEAD
-  ## TODO: complete functionality
-=======
 	## TODO: complete functionality
->>>>>>> af6d3bd568280c43f263ea0fd69629ce0de59a4f
   def create(name)
     Dir.mkdir(REPOSITORY_DIR)
     Dir.mkdir(REPOSITORY_DATA_DIR)
@@ -32,7 +28,6 @@ class Kure
   end
   
   def add(items)
-<<<<<<< HEAD
     ## Add the indicated items to the repository's pending list
     f = File.open(PENDING_FILE,"w+")
     items.each do |i|
@@ -107,7 +102,6 @@ class Kure
       end
       return false
     end
-=======
 	  ## Add the indicated items to the repository's pending list
 		f = File.open(PENDING_FILE,"w+")
     items.each do |i|
@@ -182,7 +176,6 @@ class Kure
 			end
 			return false
 		end
->>>>>>> af6d3bd568280c43f263ea0fd69629ce0de59a4f
   end
   
   def get(items=nil)
