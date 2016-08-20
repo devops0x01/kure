@@ -36,29 +36,29 @@ class TestKure < Test::Unit::TestCase
   end
 
   def test_commit()
-	  @kure.add(["test.txt"])
-		
+    @kure.add(["test.txt"])
+    
     assert_equal(true,@kure.commit(),"testing commit method")
-		
+    
     ## make sure that the pending file ended up in the repository data directory
     assert_equal(true,File.exists?(".kure/versions/0/data/test.txt"),"checking that a pending file was committed to the repository")
-		
+    
     ## after a commit the pending file should be empty
     assert_equal(0,File.size(".kure/pending"),"checking that the pending file is 0 bytes")
-		
-		## check that version numbers are advancing with new commits
-		@kure.add(["test.txt"])
-		@kure.commit()
-		assert_equal(true,File.exists?(".kure/versions/1/data/test.txt"),"check that version numbers are advancing with new commits")
-		
-		## confirm that our last version number is correct
-		f = File.open(".kure/last_version","r")
-		last_version = f.read.to_i
-		f.close
-		assert_equal(1,last_version,"confirm that our last version number is correct")
-		
-		## TODO: test version image files
-		
+    
+    ## check that version numbers are advancing with new commits
+    @kure.add(["test.txt"])
+    @kure.commit()
+    assert_equal(true,File.exists?(".kure/versions/1/data/test.txt"),"check that version numbers are advancing with new commits")
+    
+    ## confirm that our last version number is correct
+    f = File.open(".kure/last_version","r")
+    last_version = f.read.to_i
+    f.close
+    assert_equal(1,last_version,"confirm that our last version number is correct")
+    
+    ## TODO: test version image files
+    
   end
 =begin  
   def test_get()

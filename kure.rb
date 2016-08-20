@@ -10,23 +10,23 @@ class Kure
   PENDING_FILE      = "#{REPOSITORY_DIR}/pending"
   PROPERTIES_FILE   = "#{REPOSITORY_DIR}/properties"
   META_FILE         = "#{REPOSITORY_DIR}/meta"
-	LAST_VERSION_FILE = "#{REPOSITORY_DIR}/last_version"
+  LAST_VERSION_FILE = "#{REPOSITORY_DIR}/last_version"
   
 
   def initialize()
     # TODO: If .kure exist, attempt to load the repository properties file
-		if Dir.exists?(REPOSITORY_DIR) then
-			f = File.open(LAST_VERSION_FILE,"r")
-			@last_version = f.read(@last_version).to_i
-			f.close
-		else
-		  @last_version = -1
-		end
+    if Dir.exists?(REPOSITORY_DIR) then
+      f = File.open(LAST_VERSION_FILE,"r")
+      @last_version = f.read(@last_version).to_i
+      f.close
+    else
+      @last_version = -1
+    end
   end
   
   ## Create a new repository in .kure if it doesn't exist.
   ## If it already exists, show an error and exit.
-	## TODO: complete functionality
+  ## TODO: complete functionality
   def create(name)
     Dir.mkdir(REPOSITORY_DIR)
     Dir.mkdir(REPOSITORY_VERSIONS_DIR)
@@ -34,9 +34,9 @@ class Kure
     File.new(PENDING_FILE,"w").close
     File.new(META_FILE,"w").close
     File.new(PROPERTIES_FILE,"w").close
-		f = File.new(LAST_VERSION_FILE,"w")
-		f.print(@last_version)
-		f.close
+    f = File.new(LAST_VERSION_FILE,"w")
+    f.print(@last_version)
+    f.close
   end
   
   def add(items)
@@ -59,7 +59,7 @@ class Kure
   def commit(options=nil)
     ## TODO: compare files so that files which match the last version
     ##       are only committed if confirmed - or follow gits method and 
-		##       only make modified files available for check in...
+    ##       only make modified files available for check in...
   
     ## Foreach pending file rename the existing copy in data
     ## and then copy in the new one. This is an extremely inefficient
@@ -91,35 +91,35 @@ class Kure
     if success then
       ## If we successfully copied to staging then we can now move everything
       ## to data.
-			current_version_dir = "#{REPOSITORY_VERSIONS_DIR}/#{@last_version + 1}"
-			Dir.mkdir(current_version_dir)
-			Dir.mkdir("#{current_version_dir}/data")
-			## TODO: I think I can move all of these with a glob now...
+      current_version_dir = "#{REPOSITORY_VERSIONS_DIR}/#{@last_version + 1}"
+      Dir.mkdir(current_version_dir)
+      Dir.mkdir("#{current_version_dir}/data")
+      ## TODO: I think I can move all of these with a glob now...
       files.each do |f|
         f.chomp!
         FileUtils.mv("#{REPOSITORY_STAGING_DIR}/#{f}","#{current_version_dir}/data/#{f}")
       end
 
-			## If the last version number was -1 then this is the initial version.
-			## We need to create an image file from scratch. Future commits will start by
-			## loading the last versions image file and edit the data to create the new one.
-		  image = Hash.new
-			unless @last_version == -1 then
-			  image = YAML.load(File.read("#{REPOSITORY_VERSIONS_DIR}/#{@last_version}/image.yaml"))
-			end
-			
-			files.each do |f|
-				image[f] = @last_version + 1
-			end
-			
-			f = File.new("#{current_version_dir}/image.yaml","w")
-			f.print(image.to_yaml)
-			f.close
-			
-			@last_version += 1
-			f = File.open(LAST_VERSION_FILE,"w")
-		  f.print(@last_version)
-		  f.close
+      ## If the last version number was -1 then this is the initial version.
+      ## We need to create an image file from scratch. Future commits will start by
+      ## loading the last versions image file and edit the data to create the new one.
+      image = Hash.new
+      unless @last_version == -1 then
+        image = YAML.load(File.read("#{REPOSITORY_VERSIONS_DIR}/#{@last_version}/image.yaml"))
+      end
+      
+      files.each do |f|
+        image[f] = @last_version + 1
+      end
+      
+      f = File.new("#{current_version_dir}/image.yaml","w")
+      f.print(image.to_yaml)
+      f.close
+      
+      @last_version += 1
+      f = File.open(LAST_VERSION_FILE,"w")
+      f.print(@last_version)
+      f.close
       ## We have completed committing the staged files so clear the pending list.
       File.truncate(PENDING_FILE,0)
       return true
