@@ -3,9 +3,9 @@ require "yaml"
 
 ## Versioning commands are implemented here.
 class Kure
-  REPOSITORY_DIR         = ".kure"
-  REPOSITORY_VERSIONS_DIR    = "#{REPOSITORY_DIR}/versions"
-  REPOSITORY_STAGING_DIR = "#{REPOSITORY_DIR}/staged"
+  REPOSITORY_DIR          = ".kure"
+  REPOSITORY_VERSIONS_DIR = "#{REPOSITORY_DIR}/versions"
+  REPOSITORY_STAGING_DIR  = "#{REPOSITORY_DIR}/staged"
 
   PENDING_FILE      = "#{REPOSITORY_DIR}/pending"
   PROPERTIES_FILE   = "#{REPOSITORY_DIR}/properties"
@@ -14,7 +14,7 @@ class Kure
   
 
   def initialize()
-    # TODO: If .kure exist, attempt to load the repository properties file
+    # TODO: If .kure exist, attempt to load relevant information
     if Dir.exists?(REPOSITORY_DIR) then
       f = File.open(LAST_VERSION_FILE,"r")
       @last_version = f.read(@last_version).to_i
@@ -136,8 +136,18 @@ class Kure
     end
   end
 
-  def get(items=nil)
-    
+  def get(version=nil,items=nil)
+    image = Hash.new
+    if version == nil then
+      ## get with no parameters will retreive all files of the current version
+      image = YAML.load(File.read("#{self.current_dir()}/image.yaml"))
+    else
+      ## TODO: handle bad version number some how...
+      image = YAML.load(File.read("#{REPOSITORY_VERSIONS_DIR}/#{version}/image.yaml"))
+    end
+    image.keys.each do |k|
+      FileUtils.cp("#{REPOSITORY_VERSIONS_DIR}/#{image[k].to_s}/data/#{k}",k)
+    end
   end
   
   def delete(items)
@@ -154,6 +164,10 @@ class Kure
   
   def log(options=nil)
     
+  end
+
+  def current_dir()
+    return "#{REPOSITORY_VERSIONS_DIR}/#{@last_version}"
   end
   
   def timestamp()
