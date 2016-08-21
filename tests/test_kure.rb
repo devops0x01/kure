@@ -9,6 +9,8 @@ class TestKure < Test::Unit::TestCase
     @kure = Kure.new()
     @kure.create("test_repo")   
     
+    FileUtils.cd("test_repo")
+    
     f = File.new("test.txt","w")
     f.puts("a file for testing kure file versioning")
     f.close()
@@ -17,11 +19,12 @@ class TestKure < Test::Unit::TestCase
     f.puts("the second file for testing kure file versioning")
     f.close()
 
+
   end
   
   def teardown
-    File.delete("test.txt")
-    FileUtils.rm_rf(".kure")
+    FileUtils.cd ("..")
+    FileUtils.rm_rf("test_repo")
   end
   
   def test_create()
@@ -68,6 +71,10 @@ class TestKure < Test::Unit::TestCase
 
   end
 =begin  
+  def test_clone()
+
+  end
+
   def test_get()
     
   end

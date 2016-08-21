@@ -13,14 +13,13 @@ class Kure
   LAST_VERSION_FILE = "#{REPOSITORY_DIR}/last_version"
   
 
-  def initialize()
+  def initialize(path=".")
     # TODO: If .kure exist, attempt to load relevant information
     if Dir.exists?(REPOSITORY_DIR) then
+      self.load_properties(path)
       f = File.open(LAST_VERSION_FILE,"r")
       @last_version = f.read(@last_version).to_i
       f.close
-    else
-      @last_version = -1
     end
   end
   
@@ -28,14 +27,36 @@ class Kure
   ## If it already exists, show an error and exit.
   ## TODO: complete functionality
   def create(name)
-    Dir.mkdir(REPOSITORY_DIR)
-    Dir.mkdir(REPOSITORY_VERSIONS_DIR)
-    Dir.mkdir(REPOSITORY_STAGING_DIR)
-    File.new(PENDING_FILE,"w").close
-    File.new(META_FILE,"w").close
-    File.new(PROPERTIES_FILE,"w").close
-    f = File.new(LAST_VERSION_FILE,"w")
+    Dir.mkdir(name)
+
+    Dir.mkdir("#{name}/#{REPOSITORY_DIR}")
+    Dir.mkdir("#{name}/#{REPOSITORY_VERSIONS_DIR}")
+    Dir.mkdir("#{name}/#{REPOSITORY_STAGING_DIR}")
+    File.new("#{name}/#{PENDING_FILE}","w").close
+    File.new("#{name}/#{META_FILE}","w").close
+
+    @last_version = -1
+    f = File.new("#{name}/#{LAST_VERSION_FILE}","w")
     f.print(@last_version)
+    f.close
+
+    @properties = Hash.new
+    @properties["name"] = name
+    @properties["remote"] = nil
+    @properties["clone"] = false
+    f = File.new("#{name}/#{PROPERTIES_FILE}","w")
+    f.print(@properties.to_yaml)
+    f.close
+  end
+
+  def clone(src)
+    self.load_properties(src)
+    @properties["remote"] = File.absolute_path(src)
+    @properties["clone"] = true
+    FileUtils.cp_r(src,@properties["name"])
+    FileUtils.cd(@properties["name"])
+    f = File.new(PROPERTIES_FILE,"w")
+    f.print(@properties.to_yaml)
     f.close
   end
   
@@ -136,15 +157,10 @@ class Kure
     end
   end
 
-  def get(version=nil,items=nil)
-    image = Hash.new
-    if version == nil then
-      ## get with no parameters will retreive all files of the current version
-      image = YAML.load(File.read("#{self.current_dir()}/image.yaml"))
-    else
-      ## TODO: handle bad version number some how...
-      image = YAML.load(File.read("#{REPOSITORY_VERSIONS_DIR}/#{version}/image.yaml"))
-    end
+  def get(version=@last_version,items=nil)
+    # TODO: add ability to pull specific files
+    # TODO: handle bad version number some how...
+    image = YAML.load(File.read("#{REPOSITORY_VERSIONS_DIR}/#{version}/image.yaml"))
     image.keys.each do |k|
       FileUtils.cp("#{REPOSITORY_VERSIONS_DIR}/#{image[k].to_s}/data/#{k}",k)
     end
@@ -166,14 +182,8 @@ class Kure
     
   end
 
-  def current_dir()
-    return "#{REPOSITORY_VERSIONS_DIR}/#{@last_version}"
+  def load_properties(path)
+    @properties = YAML.load(File.read(path + "/" +  PROPERTIES_FILE))
   end
-  
-  def timestamp()
-    return Time.now.to_i
-  end
-  
-  private :timestamp
-  
+
 end
