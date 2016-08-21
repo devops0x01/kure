@@ -161,8 +161,14 @@ class Kure
     # TODO: add ability to pull specific files
     # TODO: handle bad version number some how...
     image = YAML.load(File.read("#{REPOSITORY_VERSIONS_DIR}/#{version}/image.yaml"))
-    image.keys.each do |k|
-      FileUtils.cp("#{REPOSITORY_VERSIONS_DIR}/#{image[k].to_s}/data/#{k}",k)
+    if items == nil then
+      image.keys.each do |k|
+        FileUtils.cp("#{REPOSITORY_VERSIONS_DIR}/#{image[k].to_s}/data/#{k}",k)
+      end
+    else
+      items.each do |i|
+        FileUtils.cp("#{REPOSITORY_VERSIONS_DIR}/#{image[i]}/data/#{i}",i)
+      end
     end
   end
   
