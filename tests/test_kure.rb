@@ -13,6 +13,10 @@ class TestKure < Test::Unit::TestCase
     f.puts("a file for testing kure file versioning")
     f.close()
 
+    f = File.new("test1.txt","w")
+    f.puts("the second file for testing kure file versioning")
+    f.close()
+
   end
   
   def teardown
@@ -47,9 +51,9 @@ class TestKure < Test::Unit::TestCase
     assert_equal(0,File.size(".kure/pending"),"checking that the pending file is 0 bytes")
     
     ## check that version numbers are advancing with new commits
-    @kure.add(["test.txt"])
+    @kure.add(["test1.txt"])
     @kure.commit()
-    assert_equal(true,File.exists?(".kure/versions/1/data/test.txt"),"check that version numbers are advancing with new commits")
+    assert_equal(true,File.exists?(".kure/versions/1/data/test1.txt"),"check that version numbers are advancing with new commits")
     
     ## confirm that our last version number is correct
     f = File.open(".kure/last_version","r")
@@ -57,8 +61,11 @@ class TestKure < Test::Unit::TestCase
     f.close
     assert_equal(1,last_version,"confirm that our last version number is correct")
     
-    ## TODO: test version image files
-    
+    ## test version image files
+    image = YAML.load(File.read(".kure/versions/1/image.yaml"))
+    assert_equal(1,image["test1.txt"].to_i,"Checking image file.")
+    assert_equal(0,image["test.txt"].to_i,"Checking image file.")
+
   end
 =begin  
   def test_get()
