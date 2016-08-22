@@ -1,5 +1,6 @@
 require "fileutils"
 require "yaml"
+require File.dirname(__FILE__) + "/log_entry.rb"
 
 ## Versioning commands are implemented here.
 class Kure
@@ -143,6 +144,18 @@ class Kure
       f.close
       ## We have completed committing the staged files so clear the pending list.
       File.truncate(PENDING_FILE,0)
+
+      ## Create a log message
+      log_entry = LogEntry.new
+      log_entry.version = @last_version
+      log_entry.date_time = Time.now
+      log_entry.commit_message = nil
+      log_entry.file_list = files
+
+      f = File.open("#{REPOSITORY_VERSIONS_DIR}/#{@last_version}/log","w+")
+      f.print(log_entry.to_yaml)
+      f.close
+
       return true
     else
       ## Success was false, so delete any staged files as part of roll back.
@@ -158,7 +171,6 @@ class Kure
   end
 
   def get(version=@last_version,items=nil)
-    # TODO: add ability to pull specific files
     # TODO: handle bad version number some how...
     image = YAML.load(File.read("#{REPOSITORY_VERSIONS_DIR}/#{version}/image.yaml"))
     if items == nil then
@@ -184,8 +196,12 @@ class Kure
     
   end
   
-  def log(options=nil)
-    
+  def log(version=@last_version)
+    log_entry = YAML.load(File.read("#{REPOSITORY_VERSIONS_DIR}/#{version}/log"))
+    puts "Version: #{log_entry.version}"
+    puts "Date_time: #{log_entry.date_time}"
+    puts "Commit_message: #{log_entry.commit_message}"
+    puts "File_list: #{log_entry.file_list}"
   end
 
   def load_properties(path)
