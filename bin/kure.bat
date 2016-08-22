@@ -1,0 +1,1 @@
+ruby %KURE_INSTALL%/main.rb %*
