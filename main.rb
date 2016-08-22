@@ -62,7 +62,11 @@ while count < ARGV.size do
   
   ## retreive log information
   elsif ARGV[count] == "log" then
-    $kure.log(ARGV[count+1])
+    log_entry = $kure.log(ARGV[count+1])
+	puts "Version: #{log_entry.version}"
+    puts "Date_time: #{log_entry.date_time}"
+    puts "Commit_message: #{log_entry.commit_message}"
+    puts "File_list: #{log_entry.file_list}"
 
     
   ## retreive information about the state of the working directory

@@ -10,7 +10,6 @@ class Kure
 
   PENDING_FILE      = "#{REPOSITORY_DIR}/pending"
   PROPERTIES_FILE   = "#{REPOSITORY_DIR}/properties"
-  META_FILE         = "#{REPOSITORY_DIR}/meta"
   LAST_VERSION_FILE = "#{REPOSITORY_DIR}/last_version"
   
 
@@ -34,7 +33,6 @@ class Kure
     Dir.mkdir("#{name}/#{REPOSITORY_VERSIONS_DIR}")
     Dir.mkdir("#{name}/#{REPOSITORY_STAGING_DIR}")
     File.new("#{name}/#{PENDING_FILE}","w").close
-    File.new("#{name}/#{META_FILE}","w").close
 
     @last_version = -1
     f = File.new("#{name}/#{LAST_VERSION_FILE}","w")
@@ -143,7 +141,7 @@ class Kure
       f.print(@last_version)
       f.close
       ## We have completed committing the staged files so clear the pending list.
-      File.truncate(PENDING_FILE,0)
+	  self.clear_pending()
 
       ## Create a log message
       log_entry = LogEntry.new
@@ -197,15 +195,15 @@ class Kure
   end
   
   def log(version=@last_version)
-    log_entry = YAML.load(File.read("#{REPOSITORY_VERSIONS_DIR}/#{version}/log"))
-    puts "Version: #{log_entry.version}"
-    puts "Date_time: #{log_entry.date_time}"
-    puts "Commit_message: #{log_entry.commit_message}"
-    puts "File_list: #{log_entry.file_list}"
+    return YAML.load(File.read("#{REPOSITORY_VERSIONS_DIR}/#{version}/log"))
   end
 
   def load_properties(path)
     @properties = YAML.load(File.read(path + "/" +  PROPERTIES_FILE))
+  end
+
+  def clear_pending()
+	File.truncate(PENDING_FILE,0)
   end
 
 end
