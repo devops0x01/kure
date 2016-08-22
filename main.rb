@@ -38,7 +38,11 @@ while count < ARGV.size do
  
   ## commit items to the repository
   elsif ARGV[count] == "commit" then
-    $kure.commit
+	if ARGV[count+1] then
+      $kure.commit(ARGV[count+1])
+	else
+	  $kure.commit
+	end
  
   ## get items from the repository
   elsif ARGV[count] == "get" then

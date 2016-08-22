@@ -78,7 +78,7 @@ class Kure
     return true
   end
   
-  def commit(options=nil)
+  def commit(message="")
     ## TODO: compare files so that files which match the last version
     ##       are only committed if confirmed - or follow gits method and 
     ##       only make modified files available for check in...
@@ -149,7 +149,7 @@ class Kure
       log_entry = LogEntry.new
       log_entry.version = @last_version
       log_entry.date_time = Time.now
-      log_entry.commit_message = nil
+      log_entry.commit_message = message
       log_entry.file_list = files
 
       f = File.open("#{REPOSITORY_VERSIONS_DIR}/#{@last_version}/log","w+")
