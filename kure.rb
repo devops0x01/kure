@@ -1,6 +1,7 @@
 require "fileutils"
 require "yaml"
 require File.dirname(__FILE__) + "/log_entry.rb"
+require File.dirname(__FILE__) + "/change.rb"
 
 ## Versioning commands are implemented here.
 class Kure
@@ -183,7 +184,7 @@ class Kure
   end
   
   def delete(items)
-    
+
   end
   
   def move(src,dest)
