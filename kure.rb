@@ -10,6 +10,7 @@ class Kure
   REPOSITORY_STAGING_DIR  = "#{REPOSITORY_DIR}/staged"
 
   PENDING_FILE      = "#{REPOSITORY_DIR}/pending"
+  STATUS_FILE       = "#{REPOSITORY_DIR}/status"
   PROPERTIES_FILE   = "#{REPOSITORY_DIR}/properties"
   LAST_VERSION_FILE = "#{REPOSITORY_DIR}/last_version"
   
@@ -34,6 +35,7 @@ class Kure
     Dir.mkdir("#{name}/#{REPOSITORY_VERSIONS_DIR}")
     Dir.mkdir("#{name}/#{REPOSITORY_STAGING_DIR}")
     File.new("#{name}/#{PENDING_FILE}","w").close
+    File.new("#{name}/#{STATUS_FILE}","w").close
 
     @last_version = -1
     f = File.new("#{name}/#{LAST_VERSION_FILE}","w")
@@ -142,7 +144,7 @@ class Kure
       f.print(@last_version)
       f.close
       ## We have completed committing the staged files so clear the pending list.
-	  self.clear_pending()
+      self.clear_pending()
 
       ## Create a log message
       log_entry = LogEntry.new
@@ -184,19 +186,47 @@ class Kure
   end
   
   def delete(items)
+    c = Change.new
+    c.action = "delete"
+    c.parameters = items
+    # TODO: set status
 
   end
   
   def move(src,dest)
-    
+    c = Change.new
+    c.action = "move"
+    c.parameters = items
+    # TODO: set status
+
   end
   
   def rename(from,to)
-    
+    c = Change.new
+    c.action = "rename"
+    c.parameters = items
+    # TODO: set status
+
   end
   
   def log(version=@last_version)
     return YAML.load(File.read("#{REPOSITORY_VERSIONS_DIR}/#{version}/log"))
+  end
+
+  def status
+
+    ## notes:
+
+    ##require "digest"
+    ##require "digest/md5"
+    ##Digest::MD5.hexdigest
+    ##Digest::SHA2.hexdigest
+
+
+    ## read in status file data
+    ## check for file modifications
+    ## check for unknown files
+    ## check for missing files
   end
 
   def load_properties(path)
@@ -204,7 +234,7 @@ class Kure
   end
 
   def clear_pending()
-	File.truncate(PENDING_FILE,0)
+    File.truncate(PENDING_FILE,0)
   end
 
 end

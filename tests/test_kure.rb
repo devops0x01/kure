@@ -29,14 +29,19 @@ class TestKure < Test::Unit::TestCase
   def test_create()
     assert_equal(true,Dir.exists?(".kure"),"Check if the repository root directory was created.")
     assert_equal(true,File.exists?(".kure/pending"),"Check if the pending file was created.")
+    assert_equal(true,File.exists?(".kure/status"),"Check if the status file was created.")
     assert_equal(true,Dir.exists?(".kure/versions"),"Check if the repository data directory was created.")
     assert_equal(true,Dir.exists?(".kure/staged"),"Check if the repository staging directory was created.")
     assert_equal(true,File.exists?(".kure/properties"),"Check if the properties file was created.")
   end
   
   def test_add()
+
     assert_equal(true,@kure.add(["test.txt"]),"Test addition of file to the pending commit list.")
     assert_equal("test.txt",File.read(".kure/pending").chomp,"Test if the pending commit list has accurate information.")
+    @kure.clear_pending
+    assert_equal(0,File.size(".kure/pending"),"Check if clear truncated the pending file.")
+
     assert_equal(false,@kure.add(["does_not_exist.txt"]),"Test that an attempt to add a non-existent file does not work.")
   end
 

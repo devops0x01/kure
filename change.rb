@@ -2,7 +2,7 @@
 
 class Change
 
-  attr_accessor :action,:options
+  attr_accessor :action,:parameters
 
 end
 

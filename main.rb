@@ -63,7 +63,7 @@ while count < ARGV.size do
   ## retreive log information
   elsif ARGV[count] == "log" then
     log_entry = $kure.log(ARGV[count+1])
-	puts "Version: #{log_entry.version}"
+    puts "Version: #{log_entry.version}"
     puts "Date_time: #{log_entry.date_time}"
     puts "Commit_message: #{log_entry.commit_message}"
     puts "File_list: #{log_entry.file_list}"
@@ -73,6 +73,8 @@ while count < ARGV.size do
   elsif ARGV[count] == "status" then
 
 
+  elsif ARGV[count] == "clear" then
+    $kure.clear_pending
   end
   
   count += 1
