@@ -4,6 +4,8 @@ require File.dirname(__FILE__) + "/kure.rb"
 
 $kure = Kure.new
 
+## note: the code below is temporary. It will be replaced with something more fitting.
+
 ## parse the command line arguments
 count = 0
 while count < ARGV.size do
@@ -50,14 +52,17 @@ while count < ARGV.size do
   
   ## delete items from the repository
   elsif ARGV[count] == "delete" then
-
+    # TODO: add deletion of multiple items
+    $kure.delete([ARGV[count+1]])
 
   ## rename an item in the repository
   elsif ARGV[count] == "rename" then
+    $kure.rename(ARGV[count+1],ARGV[count+2])
  
  
   ## move items in the repository
   elsif ARGV[count] == "move" then
+    $kure.move(ARGV[count+1],ARGV[count+2])
 
   
   ## retreive log information
@@ -71,7 +76,7 @@ while count < ARGV.size do
     
   ## retreive information about the state of the working directory
   elsif ARGV[count] == "status" then
-
+    puts $kure.status
 
   elsif ARGV[count] == "clear" then
     $kure.clear_pending

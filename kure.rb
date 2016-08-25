@@ -22,6 +22,7 @@ class Kure
       f = File.open(LAST_VERSION_FILE,"r")
       @last_version = f.read(@last_version).to_i
       f.close
+      @status = self.load_status()
     end
   end
   
@@ -29,13 +30,20 @@ class Kure
   ## If it already exists, show an error and exit.
   ## TODO: complete functionality
   def create(name)
+    @status = Hash.new
+
     Dir.mkdir(name)
 
     Dir.mkdir("#{name}/#{REPOSITORY_DIR}")
     Dir.mkdir("#{name}/#{REPOSITORY_VERSIONS_DIR}")
     Dir.mkdir("#{name}/#{REPOSITORY_STAGING_DIR}")
     File.new("#{name}/#{PENDING_FILE}","w").close
-    File.new("#{name}/#{STATUS_FILE}","w").close
+
+    f = File.new("#{name}/#{STATUS_FILE}","w")
+    f.print(@status.to_yaml)
+    f.close
+
+    
 
     @last_version = -1
     f = File.new("#{name}/#{LAST_VERSION_FILE}","w")
@@ -186,27 +194,34 @@ class Kure
   end
   
   def delete(items)
-    c = Change.new
-    c.action = "delete"
-    c.parameters = items
-    # TODO: set status
-
+    items.each do |i|
+      FileUtils.rm(i)
+      c = Change.new
+      c.action = "delete"
+      c.parameters = i
+      @status[i] = c
+    end
+    self.save_status()
   end
   
   def move(src,dest)
     c = Change.new
     c.action = "move"
-    c.parameters = items
+    c.parameters = [src,dest]
+    # TODO: physically move the file
     # TODO: set status
-
+    @status[src] = c
+    self.save_status
   end
   
   def rename(from,to)
     c = Change.new
     c.action = "rename"
-    c.parameters = items
+    c.parameters = [from,to]
+    # TODO: rename the file
     # TODO: set status
-
+    @status[from] = c
+    self.save_status
   end
   
   def log(version=@last_version)
@@ -214,6 +229,8 @@ class Kure
   end
 
   def status
+
+    return @status
 
     ## notes:
 
@@ -231,6 +248,16 @@ class Kure
 
   def load_properties(path)
     @properties = YAML.load(File.read(path + "/" +  PROPERTIES_FILE))
+  end
+ 
+  def load_status()
+    @status = YAML.load(File.read(STATUS_FILE))
+  end
+
+  def save_status()
+    f = File.open(STATUS_FILE,"w")
+    f.print @status.to_yaml
+    f.close
   end
 
   def clear_pending()
