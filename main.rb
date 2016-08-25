@@ -22,9 +22,9 @@ while count < ARGV.size do
 
     $kure.create(ARGV[count+1])
 
- 
+    break
   ## add items to list for future commit
-  elsif ARGV[count] == "add" then
+  elsif ARGV[count] == "add" || ARGV[count] == "a" then
     list = Array.new
     count += 1
     while count < ARGV.size do
@@ -33,11 +33,12 @@ while count < ARGV.size do
     end
     $kure.add(list)
 
+    break
   ## clone a repository subordinate to the original
   elsif ARGV[count] == "clone" then
     $kure.clone(ARGV[count+1])
  
- 
+    break
   ## commit items to the repository
   elsif ARGV[count] == "commit" then
 	if ARGV[count+1] then
@@ -45,26 +46,24 @@ while count < ARGV.size do
 	else
 	  $kure.commit
 	end
- 
+    
+	break
   ## get items from the repository
-  elsif ARGV[count] == "get" then
+  elsif ARGV[count] == "get" || ARGV[count] == "g" then
     $kure.get(ARGV[count+1])
-  
+    
+	break
   ## delete items from the repository
-  elsif ARGV[count] == "delete" then
+  elsif ARGV[count] == "delete" || ARGV[count] == "rm" || ARGV[count] == "del"then
     # TODO: add deletion of multiple items
     $kure.delete([ARGV[count+1]])
 
-  ## rename an item in the repository
-  elsif ARGV[count] == "rename" then
-    $kure.rename(ARGV[count+1],ARGV[count+2])
- 
- 
-  ## move items in the repository
-  elsif ARGV[count] == "move" then
+    break
+  ## move/rename items in the repository
+  elsif ARGV[count] == "move" || ARGV[count] == "move" then
     $kure.move(ARGV[count+1],ARGV[count+2])
 
-  
+    break
   ## retreive log information
   elsif ARGV[count] == "log" then
     log_entry = $kure.log(ARGV[count+1])
@@ -73,13 +72,16 @@ while count < ARGV.size do
     puts "Commit_message: #{log_entry.commit_message}"
     puts "File_list: #{log_entry.file_list}"
 
-    
+    break
   ## retreive information about the state of the working directory
-  elsif ARGV[count] == "status" then
+  elsif ARGV[count] == "status" || ARGV[count] == "s" then
     puts $kure.status
-
+    
+	break
   elsif ARGV[count] == "clear" then
     $kure.clear_pending
+	
+	break
   end
   
   count += 1
