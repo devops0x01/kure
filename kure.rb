@@ -208,19 +208,8 @@ class Kure
     c = Change.new
     c.action = "move"
     c.parameters = [src,dest]
-    # TODO: physically move the file
-    # TODO: set status
+	FileUtils.mv(src,dest)
     @status[src] = c
-    self.save_status
-  end
-  
-  def rename(from,to)
-    c = Change.new
-    c.action = "rename"
-    c.parameters = [from,to]
-    # TODO: rename the file
-    # TODO: set status
-    @status[from] = c
     self.save_status
   end
   
