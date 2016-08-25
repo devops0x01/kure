@@ -16,47 +16,55 @@ class Kure
   
 
   def initialize(path=".")
-    # TODO: If .kure exist, attempt to load relevant information
     if Dir.exists?(REPOSITORY_DIR) then
       self.load_properties(path)
       f = File.open(LAST_VERSION_FILE,"r")
       @last_version = f.read(@last_version).to_i
       f.close
       @status = self.load_status()
+	  @pending = YAML.load(File.read(PENDING_FILE))
     end
   end
   
   ## Create a new repository in .kure if it doesn't exist.
-  ## If it already exists, show an error and exit.
-  ## TODO: complete functionality
+  ## If it already exists, return an error
   def create(name)
-    @status = Hash.new
+	if Dir.exists?(name) then
+		return false
+	else
+		@status     = Hash.new
+		@pending    = Hash.new
+		@properties = Hash.new
 
-    Dir.mkdir(name)
+		Dir.mkdir(name)
 
-    Dir.mkdir("#{name}/#{REPOSITORY_DIR}")
-    Dir.mkdir("#{name}/#{REPOSITORY_VERSIONS_DIR}")
-    Dir.mkdir("#{name}/#{REPOSITORY_STAGING_DIR}")
-    File.new("#{name}/#{PENDING_FILE}","w").close
+		Dir.mkdir("#{name}/#{REPOSITORY_DIR}")
+		Dir.mkdir("#{name}/#{REPOSITORY_VERSIONS_DIR}")
+		Dir.mkdir("#{name}/#{REPOSITORY_STAGING_DIR}")
 
-    f = File.new("#{name}/#{STATUS_FILE}","w")
-    f.print(@status.to_yaml)
-    f.close
+		f = File.new("#{name}/#{PENDING_FILE}","w")
+		f.print(@pending.to_yaml)
+		f.close
 
-    
+		f = File.new("#{name}/#{STATUS_FILE}","w")
+		f.print(@status.to_yaml)
+		f.close
 
-    @last_version = -1
-    f = File.new("#{name}/#{LAST_VERSION_FILE}","w")
-    f.print(@last_version)
-    f.close
+		@last_version = -1
+		f = File.new("#{name}/#{LAST_VERSION_FILE}","w")
+		f.print(@last_version)
+		f.close
 
-    @properties = Hash.new
-    @properties["name"] = name
-    @properties["remote"] = nil
-    @properties["clone"] = false
-    f = File.new("#{name}/#{PROPERTIES_FILE}","w")
-    f.print(@properties.to_yaml)
-    f.close
+		@properties["name"]   = name
+		@properties["remote"] = nil
+		@properties["clone"]  = false
+		
+		f = File.new("#{name}/#{PROPERTIES_FILE}","w")
+		f.print(@properties.to_yaml)
+		f.close
+		
+		return true
+	end
   end
 
   def clone(src)
@@ -72,17 +80,18 @@ class Kure
   
   def add(items)
     ## Add the indicated items to the repository's pending list
-    f = File.open(PENDING_FILE,"w+")
     items.each do |i|
       if File.exists?(i) then
-        f.puts(i)
+		c = Change.new
+		c.action = "add"
+		c.parameters = i
+		@pending[i] = c
       else
-        ## TODO: file does not exist, omitting
-        ## TODO: should I truncate the pending list here?
-        f.close()
         return false
-      end
+	  end
     end
+    f = File.open(PENDING_FILE,"w")
+	f.print(@pending.to_yaml)
     f.close()
     return true
   end
@@ -101,9 +110,9 @@ class Kure
     ## If a file is missing, error out and delete the staged files
     ## then return false. This makes for an easy roll back.
     success = true
-    files = File.readlines(PENDING_FILE)
-    files.each do |f|
-      f.chomp!
+	
+	# TODO: need to add change types other than modification here
+	@pending.keys.each do |f|
       if File.exists?(f) then
         ## If it exists we will attempt a copy to staging
         FileUtils.copy(f,"#{REPOSITORY_STAGING_DIR}/#{f}")
@@ -126,8 +135,7 @@ class Kure
       Dir.mkdir(current_version_dir)
       Dir.mkdir("#{current_version_dir}/data")
       ## TODO: I think I can move all of these with a glob now...
-      files.each do |f|
-        f.chomp!
+      @pending.keys.each do |f|
         FileUtils.mv("#{REPOSITORY_STAGING_DIR}/#{f}","#{current_version_dir}/data/#{f}")
       end
 
@@ -139,7 +147,7 @@ class Kure
         image = YAML.load(File.read("#{REPOSITORY_VERSIONS_DIR}/#{@last_version}/image.yaml"))
       end
       
-      files.each do |f|
+      @pending.keys.each do |f|
         image[f] = @last_version + 1
       end
       
@@ -152,14 +160,18 @@ class Kure
       f.print(@last_version)
       f.close
       ## We have completed committing the staged files so clear the pending list.
-      self.clear_pending()
+	  @pending = Hash.new
+	  f = File.open(PENDING_FILE,"w")
+	  f.print(@pending.to_yaml)
+      f.close()
+	  
 
       ## Create a log message
       log_entry = LogEntry.new
       log_entry.version = @last_version
       log_entry.date_time = Time.now
       log_entry.commit_message = message
-      log_entry.file_list = files
+      log_entry.file_list = @pending.keys
 
       f = File.open("#{REPOSITORY_VERSIONS_DIR}/#{@last_version}/log","w+")
       f.print(log_entry.to_yaml)
@@ -250,7 +262,10 @@ class Kure
   end
 
   def clear_pending()
-    File.truncate(PENDING_FILE,0)
+	@pending = Hash.new
+	f = File.open("#{name}/#{PENDING_FILE}","w")
+	f.print(@pending.to_yaml)
+	f.close
   end
 
 end

@@ -36,44 +36,33 @@ class TestKure < Test::Unit::TestCase
   end
   
   def test_add()
-
     assert_equal(true,@kure.add(["test.txt"]),"Test addition of file to the pending commit list.")
-    assert_equal("test.txt",File.read(".kure/pending").chomp,"Test if the pending commit list has accurate information.")
-    @kure.clear_pending
-    assert_equal(0,File.size(".kure/pending"),"Check if clear truncated the pending file.")
-
+    assert_equal("---\ntest.txt: !ruby/object:Change\n  action: add\n  parameters: test.txt",File.read(".kure/pending").chomp,"Test if the pending commit list has accurate information.")
     assert_equal(false,@kure.add(["does_not_exist.txt"]),"Test that an attempt to add a non-existent file does not work.")
   end
 
   def test_commit()
     @kure.add(["test.txt"])
-    
     assert_equal(true,@kure.commit(),"Testing commit method.")
-    
-    ## make sure that the committed file ended up in the correct data directory
     assert_equal(true,File.exists?(".kure/versions/0/data/test.txt"),"Checking that the file was committed to the repository.")
+    assert_equal("--- {}\n",File.read(".kure/pending"),"Checking that the pending file is an empty hash.")
     
-    ## after a commit the pending file should be empty
-    assert_equal(0,File.size(".kure/pending"),"Checking that the pending file is 0 bytes.")
-    
-    ## check that version numbers are advancing with new commits
-    @kure.add(["test1.txt"])
+	@kure.add(["test1.txt"])
     @kure.commit()
     assert_equal(true,File.exists?(".kure/versions/1/data/test1.txt"),"Check that version numbers are advancing with new commits.")
     
-    ## confirm that our last version number is correct
-    f = File.open(".kure/last_version","r")
+	f = File.open(".kure/last_version","r")
     last_version = f.read.to_i
     f.close
     assert_equal(1,last_version,"Confirm that our last version number is correct.")
     
-    ## test version image files
-    image = YAML.load(File.read(".kure/versions/1/image.yaml"))
+	image = YAML.load(File.read(".kure/versions/1/image.yaml"))
     assert_equal(1,image["test1.txt"].to_i,"Checking image file.")
     assert_equal(0,image["test.txt"].to_i,"Checking image file.")
 
   end
   
+=begin   
   def test_get()
     
   end
@@ -82,7 +71,6 @@ class TestKure < Test::Unit::TestCase
     
   end
 
-=begin  
   def test_clone()
 
   end
