@@ -81,24 +81,31 @@ class Kure
   def add(items)
     ## Add the indicated items to the repository's pending list
     items.each do |i|
-      if File.exists?(i) then
-		c = Change.new
-		c.action = "add"
-		c.parameters = i
-		@pending[i] = c
+      if @status.has_key?(i) then
+          # TODO: add delete and move to pending here
+          c = @status[i]
+          @pending[i] = c
+          @status.remove(i)
       else
-        return false
-	  end
+        if File.exists?(i) then
+          c = Change.new
+          c.action = "add"
+          c.parameters = i
+          @pending[i] = c
+        else
+          return false
+        end
+      end
     end
     f = File.open(PENDING_FILE,"w")
-	f.print(@pending.to_yaml)
+    f.print(@pending.to_yaml)
     f.close()
     return true
   end
   
   def commit(message="")
     ## TODO: compare files so that files which match the last version
-    ##       are only committed if confirmed - or follow gits method and 
+    ##       are only committed if confirmed - or follow gits method and
     ##       only make modified files available for check in...
   
     ## Foreach pending file rename the existing copy in data
@@ -148,7 +155,9 @@ class Kure
       end
       
       @pending.keys.each do |f|
-        image[f] = @last_version + 1
+        if @pending[f].action == "add" then
+          image[f] = @last_version + 1
+        end
       end
       
       f = File.new("#{current_version_dir}/image.yaml","w")
@@ -159,34 +168,25 @@ class Kure
       f = File.open(LAST_VERSION_FILE,"w")
       f.print(@last_version)
       f.close
-      ## We have completed committing the staged files so clear the pending list.
-	  @pending = Hash.new
-	  f = File.open(PENDING_FILE,"w")
-	  f.print(@pending.to_yaml)
-      f.close()
-	  
 
       ## Create a log message
-      log_entry = LogEntry.new
-      log_entry.version = @last_version
-      log_entry.date_time = Time.now
-      log_entry.commit_message = message
-      log_entry.file_list = @pending.keys
-
-      f = File.open("#{REPOSITORY_VERSIONS_DIR}/#{@last_version}/log","w+")
-      f.print(log_entry.to_yaml)
+      self.log(message)
+      
+      f = File.open("#{REPOSITORY_VERSIONS_DIR}/#{@last_version}/log","w")
+      f.print(@log.to_yaml)
       f.close
-
+      
+      ## We have completed committing the staged files so clear the pending list.
+      @pending = Hash.new
+	    f = File.open(PENDING_FILE,"w")
+	    f.print(@pending.to_yaml)
+      f.close()
+      
       return true
     else
       ## Success was false, so delete any staged files as part of roll back.
       ## TODO: how should I handle the pending list here?
-      entries = Dir.entries(REPOSITORY_STAGING_DIR)
-      entries.delete("..")
-      entries.delete(".")
-      entries.each do |e|
-        FileUtils.rm("#{REPOSITORY_STAGING_DIR}/#{e}")
-      end
+      self.clear_staging_dir
       return false
     end
   end
@@ -220,7 +220,7 @@ class Kure
     c = Change.new
     c.action = "move"
     c.parameters = [src,dest]
-	FileUtils.mv(src,dest)
+	  FileUtils.mv(src,dest)
     @status[src] = c
     self.save_status
   end
@@ -262,10 +262,27 @@ class Kure
   end
 
   def clear_pending()
-	@pending = Hash.new
-	f = File.open("#{name}/#{PENDING_FILE}","w")
-	f.print(@pending.to_yaml)
-	f.close
+    @pending = Hash.new
+    f = File.open("#{name}/#{PENDING_FILE}","w")
+    f.print(@pending.to_yaml)
+    f.close
+  end
+  
+  def clear_staging_dir()
+    entries = Dir.entries(REPOSITORY_STAGING_DIR)
+    entries.delete("..")
+    entries.delete(".")
+    entries.each do |e|
+      FileUtils.rm("#{REPOSITORY_STAGING_DIR}/#{e}")
+    end
+  end
+  
+  def log(message)
+    @log = LogEntry.new
+    @log.version = @last_version
+    @log.date_time = Time.now
+    @log.commit_message = message
+    @log.file_list = @pending
   end
 
 end
