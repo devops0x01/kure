@@ -116,26 +116,13 @@ class Kure
     ## First copy each file to a staging directory.
     ## If a file is missing, error out and delete the staged files
     ## then return false. This makes for an easy roll back.
-    success = true
-	
-	# TODO: need to add change types other than modification here
-	@pending.keys.each do |f|
-      if File.exists?(f) then
-        ## If it exists we will attempt a copy to staging
+
+	  @pending.keys.each do |f|
+	    if @pending[f].action == "add" then
+	      puts "<#{f}>"
         FileUtils.copy(f,"#{REPOSITORY_STAGING_DIR}/#{f}")
-        unless File.exists?("#{REPOSITORY_STAGING_DIR}/#{f}") then
-          ## If copy failed then success is set to false and we need to roll back.
-          success = false
-          break
-        end
-      else
-        ## If a file indicated by the pending list doesn't exist
-        ## then success is set to false and we need to roll back.
-        success = false
-        break
       end
-    end
-    if success then
+
       ## If we successfully copied to staging then we can now move everything
       ## to data.
       current_version_dir = "#{REPOSITORY_VERSIONS_DIR}/#{@last_version + 1}"
@@ -143,51 +130,39 @@ class Kure
       Dir.mkdir("#{current_version_dir}/data")
       ## TODO: I think I can move all of these with a glob now...
       @pending.keys.each do |f|
+        if @pending[f].action == "add" then
         FileUtils.mv("#{REPOSITORY_STAGING_DIR}/#{f}","#{current_version_dir}/data/#{f}")
+        end
       end
 
       ## If the last version number was -1 then this is the initial version.
       ## We need to create an image file from scratch. Future commits will start by
       ## loading the last versions image file and edit the data to create the new one.
-      image = Hash.new
+      @image = Hash.new
       unless @last_version == -1 then
         image = YAML.load(File.read("#{REPOSITORY_VERSIONS_DIR}/#{@last_version}/image.yaml"))
       end
       
       @pending.keys.each do |f|
         if @pending[f].action == "add" then
-          image[f] = @last_version + 1
+          @image[f] = @last_version + 1
         end
       end
       
-      f = File.new("#{current_version_dir}/image.yaml","w")
-      f.print(image.to_yaml)
-      f.close
+      self.save_image
       
       @last_version += 1
-      f = File.open(LAST_VERSION_FILE,"w")
-      f.print(@last_version)
-      f.close
+      self.save_version
 
       ## Create a log message
-      self.log(message)
-      
-      f = File.open("#{REPOSITORY_VERSIONS_DIR}/#{@last_version}/log","w")
-      f.print(@log.to_yaml)
-      f.close
-      
+      self.log_entry(message)
+      self.save_log()
+
       ## We have completed committing the staged files so clear the pending list.
       @pending = Hash.new
-	    f = File.open(PENDING_FILE,"w")
-	    f.print(@pending.to_yaml)
-      f.close()
-      
-      return true
-    else
-      ## Success was false, so delete any staged files as part of roll back.
-      ## TODO: how should I handle the pending list here?
+      self.save_pending
+
       self.clear_staging_dir
-      return false
     end
   end
 
@@ -225,7 +200,7 @@ class Kure
     self.save_status
   end
   
-  def log(version=@last_version)
+  def get_log(version=@last_version)
     return YAML.load(File.read("#{REPOSITORY_VERSIONS_DIR}/#{version}/log"))
   end
 
@@ -268,6 +243,24 @@ class Kure
     f.close
   end
   
+  def save_pending()
+    f = File.open(PENDING_FILE,"w")
+	  f.print(@pending.to_yaml)
+    f.close()
+  end
+  
+  def save_version()
+    f = File.open(LAST_VERSION_FILE,"w")
+    f.print(@last_version)
+    f.close
+  end
+  
+  def save_image()
+    f = File.new("#{REPOSITORY_VERSIONS_DIR}/#{@last_version + 1}/image.yaml","w")
+    f.print(@image.to_yaml)
+    f.close
+  end
+  
   def clear_staging_dir()
     entries = Dir.entries(REPOSITORY_STAGING_DIR)
     entries.delete("..")
@@ -277,12 +270,18 @@ class Kure
     end
   end
   
-  def log(message)
+  def log_entry(message)
     @log = LogEntry.new
     @log.version = @last_version
     @log.date_time = Time.now
     @log.commit_message = message
     @log.file_list = @pending
+  end
+  
+  def save_log()
+    f = File.open("#{REPOSITORY_VERSIONS_DIR}/#{@last_version}/log","w")
+    f.print(@log.to_yaml)
+    f.close
   end
 
 end

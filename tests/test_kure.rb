@@ -7,7 +7,7 @@ class TestKure < Test::Unit::TestCase
   
   def setup
     @kure = Kure.new()
-    @kure.create("test_repo")   
+    @kure.create("test_repo")
     
     FileUtils.cd("test_repo")
     
@@ -43,7 +43,7 @@ class TestKure < Test::Unit::TestCase
 
   def test_commit()
     @kure.add(["test.txt"])
-    assert_equal(true,@kure.commit(),"Testing commit method.")
+    @kure.commit()
     assert_equal(true,File.exists?(".kure/versions/0/data/test.txt"),"Checking that the file was committed to the repository.")
     assert_equal("--- {}\n",File.read(".kure/pending"),"Checking that the pending file is an empty hash.")
     
@@ -62,7 +62,7 @@ class TestKure < Test::Unit::TestCase
 
   end
   
-=begin   
+=begin
   def test_get()
     
   end
