@@ -75,7 +75,13 @@ while count < ARGV.size do
     break
   ## retreive information about the state of the working directory
   elsif ARGV[count] == "status" || ARGV[count] == "s" then
+    puts;puts
+    puts "STATUS:"
     puts $kure.status
+    puts;puts
+    puts "PENDING:"
+    puts $kure.pending
+    puts;puts
     
 	break
   elsif ARGV[count] == "clear" then

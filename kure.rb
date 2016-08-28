@@ -13,6 +13,8 @@ class Kure
   STATUS_FILE       = "#{REPOSITORY_DIR}/status"
   PROPERTIES_FILE   = "#{REPOSITORY_DIR}/properties"
   LAST_VERSION_FILE = "#{REPOSITORY_DIR}/last_version"
+
+  attr_reader :pending,:status
   
 
   def initialize(path=".")
@@ -83,6 +85,7 @@ class Kure
       if @status.has_key?(i) then
           # TODO: add delete and move to pending here
           c = @status[i]
+          @status.delete(i)
           @pending[i] = c
           @status.delete(i)
       else
@@ -96,9 +99,10 @@ class Kure
         end
       end
     end
-    f = File.open(PENDING_FILE,"w")
-    f.print(@pending.to_yaml)
-    f.close()
+    
+    self.save_pending 
+    self.save_status
+
     return true
   end
   
@@ -227,9 +231,7 @@ class Kure
     return YAML.load(File.read("#{REPOSITORY_VERSIONS_DIR}/#{version}/log"))
   end
 
-  def status
-
-    return @status
+  def get_status
 
     ## notes:
 
