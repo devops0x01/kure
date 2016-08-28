@@ -22,49 +22,48 @@ class Kure
       @last_version = f.read(@last_version).to_i
       f.close
       @status = self.load_status()
-	  @pending = YAML.load(File.read(PENDING_FILE))
+      @pending = YAML.load(File.read(PENDING_FILE))
     end
   end
   
   ## Create a new repository in .kure if it doesn't exist.
   ## If it already exists, return an error
   def create(name)
-	if Dir.exists?(name) then
-		return false
-	else
-		@status     = Hash.new
-		@pending    = Hash.new
-		@properties = Hash.new
+    if Dir.exists?(name) then
+      return false
+    else
+      @status     = Hash.new
+      @pending    = Hash.new
+      @properties = Hash.new
 
-		Dir.mkdir(name)
+      Dir.mkdir(name)
+      Dir.mkdir("#{name}/#{REPOSITORY_DIR}")
+      Dir.mkdir("#{name}/#{REPOSITORY_VERSIONS_DIR}")
+      Dir.mkdir("#{name}/#{REPOSITORY_STAGING_DIR}")
+    
+      f = File.new("#{name}/#{PENDING_FILE}","w")
+      f.print(@pending.to_yaml)
+      f.close
+    
+      f = File.new("#{name}/#{STATUS_FILE}","w")
+      f.print(@status.to_yaml)
+      f.close
+    
+      @last_version = -1
+      f = File.new("#{name}/#{LAST_VERSION_FILE}","w")
+      f.print(@last_version)
+      f.close
+    
+      @properties["name"]   = name
+      @properties["remote"] = nil
+      @properties["clone"]  = false
+        
+      f = File.new("#{name}/#{PROPERTIES_FILE}","w")
+      f.print(@properties.to_yaml)
+      f.close
 
-		Dir.mkdir("#{name}/#{REPOSITORY_DIR}")
-		Dir.mkdir("#{name}/#{REPOSITORY_VERSIONS_DIR}")
-		Dir.mkdir("#{name}/#{REPOSITORY_STAGING_DIR}")
-
-		f = File.new("#{name}/#{PENDING_FILE}","w")
-		f.print(@pending.to_yaml)
-		f.close
-
-		f = File.new("#{name}/#{STATUS_FILE}","w")
-		f.print(@status.to_yaml)
-		f.close
-
-		@last_version = -1
-		f = File.new("#{name}/#{LAST_VERSION_FILE}","w")
-		f.print(@last_version)
-		f.close
-
-		@properties["name"]   = name
-		@properties["remote"] = nil
-		@properties["clone"]  = false
-		
-		f = File.new("#{name}/#{PROPERTIES_FILE}","w")
-		f.print(@properties.to_yaml)
-		f.close
-		
-		return true
-	end
+      return true
+    end
   end
 
   def clone(src)
@@ -85,7 +84,7 @@ class Kure
           # TODO: add delete and move to pending here
           c = @status[i]
           @pending[i] = c
-          @status.remove(i)
+          @status.delete(i)
       else
         if File.exists?(i) then
           c = Change.new
@@ -117,53 +116,77 @@ class Kure
     ## If a file is missing, error out and delete the staged files
     ## then return false. This makes for an easy roll back.
 
-	  @pending.keys.each do |f|
-	    if @pending[f].action == "add" then
-	      puts "<#{f}>"
-        FileUtils.copy(f,"#{REPOSITORY_STAGING_DIR}/#{f}")
-      end
 
-      ## If we successfully copied to staging then we can now move everything
-      ## to data.
-      current_version_dir = "#{REPOSITORY_VERSIONS_DIR}/#{@last_version + 1}"
-      Dir.mkdir(current_version_dir)
-      Dir.mkdir("#{current_version_dir}/data")
-      ## TODO: I think I can move all of these with a glob now...
-      @pending.keys.each do |f|
-        if @pending[f].action == "add" then
-        FileUtils.mv("#{REPOSITORY_STAGING_DIR}/#{f}","#{current_version_dir}/data/#{f}")
-        end
-      end
-
-      ## If the last version number was -1 then this is the initial version.
-      ## We need to create an image file from scratch. Future commits will start by
-      ## loading the last versions image file and edit the data to create the new one.
-      @image = Hash.new
-      unless @last_version == -1 then
-        image = YAML.load(File.read("#{REPOSITORY_VERSIONS_DIR}/#{@last_version}/image.yaml"))
-      end
-      
-      @pending.keys.each do |f|
-        if @pending[f].action == "add" then
-          @image[f] = @last_version + 1
-        end
-      end
-      
-      self.save_image
-      
-      @last_version += 1
-      self.save_version
-
-      ## Create a log message
-      self.log_entry(message)
-      self.save_log()
-
-      ## We have completed committing the staged files so clear the pending list.
-      @pending = Hash.new
-      self.save_pending
-
-      self.clear_staging_dir
+    ## If the last version number was -1 then this is the initial version.
+    ## We need to create an image file from scratch. Future commits will start by
+    ## loading the last versions image file and edit the data to create the new one.
+    @image = Hash.new
+    unless @last_version == -1 then
+      @image = YAML.load(File.read("#{REPOSITORY_VERSIONS_DIR}/#{@last_version}/image.yaml"))
     end
+
+    puts @image
+
+    @pending.keys.each do |f|
+
+      ## Go through the pending files and setup the version to reflect the changes.
+      ##    Modified files and new files are added to the version data directory
+      ##    then recorded in the image file.
+      ##
+      ##    Deleted files are removed from the loaded image hash so they are not
+      ##    Propagated to the this version.
+      ##
+      ##    Moved files have there paths changed in the image hash to reflect the
+      ##    new directory/name. The file with the new name/placement is moved into
+      ##    the appropriate part of this version's data directory.
+      ##
+      if @pending[f].action == "add" then
+        puts "adding: <#{f}>"
+        FileUtils.copy(f,"#{REPOSITORY_STAGING_DIR}/#{f}")
+      elsif @pending[f].action == "delete" then
+        puts "removing: <#{f}>"
+        @image.delete(f)
+      elsif @pending[f].action == "move" then
+        puts "moving: <#{f}>"
+        # TODO: add move code for commits
+      end
+    end
+
+    puts @image
+
+    ## Move items from staging to data.
+    current_version_dir = "#{REPOSITORY_VERSIONS_DIR}/#{@last_version + 1}"
+    Dir.mkdir(current_version_dir)
+    Dir.mkdir("#{current_version_dir}/data")
+
+    @pending.keys.each do |f|
+      if @pending[f].action == "add" then
+      FileUtils.mv("#{REPOSITORY_STAGING_DIR}/#{f}","#{current_version_dir}/data/#{f}")
+      end
+    end
+
+    ## Set the version for each file recorded in the image file.
+    @pending.keys.each do |f|
+      if @pending[f].action == "add" then
+        @image[f] = @last_version + 1
+      end
+    end
+      
+    self.save_image
+      
+    @last_version += 1
+    self.save_version
+
+    ## Create a log message
+    self.log_entry(message)
+    self.save_log()
+
+    ## We have completed committing the staged files so clear the pending list.
+    @pending = Hash.new
+    self.save_pending
+
+    self.clear_staging_dir
+
   end
 
   def get(version=@last_version,items=nil)
@@ -195,7 +218,7 @@ class Kure
     c = Change.new
     c.action = "move"
     c.parameters = [src,dest]
-	  FileUtils.mv(src,dest)
+    FileUtils.mv(src,dest)
     @status[src] = c
     self.save_status
   end
@@ -245,7 +268,7 @@ class Kure
   
   def save_pending()
     f = File.open(PENDING_FILE,"w")
-	  f.print(@pending.to_yaml)
+    f.print(@pending.to_yaml)
     f.close()
   end
   
