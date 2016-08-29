@@ -270,7 +270,7 @@ class Kure
 
   def clear_pending()
     @pending = Hash.new
-    f = File.open("#{name}/#{PENDING_FILE}","w")
+    f = File.open("#{PENDING_FILE}","w")
     f.print(@pending.to_yaml)
     f.close
   end
