@@ -152,7 +152,11 @@ class Kure
         @image.delete(f)
       elsif @pending[f].action == "move" then
         puts "moving: <#{f}>"
-        # TODO: add move code for commits
+        version = @image[f]
+        @image.delete(f)
+        newName = @pending[f].parameters[1]
+        @image[newName] = (version + 1)
+        FileUtils.copy(newName,"#{REPOSITORY_STAGING_DIR}/#{newName}")
       end
     end
 
@@ -166,6 +170,9 @@ class Kure
     @pending.keys.each do |f|
       if @pending[f].action == "add" then
       FileUtils.mv("#{REPOSITORY_STAGING_DIR}/#{f}","#{current_version_dir}/data/#{f}")
+      elsif @pending[f].action == "move" then
+      newName = @pending[f].parameters[1]
+      FileUtils.mv("#{REPOSITORY_STAGING_DIR}/#{newName}","#{current_version_dir}/data/#{newName}")
       end
     end
 
