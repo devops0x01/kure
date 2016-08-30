@@ -69,14 +69,25 @@ class Kure
   end
 
   def clone(src)
-    self.load_properties(src)
-    @properties["remote"] = File.absolute_path(src)
-    @properties["clone"] = true
-    FileUtils.cp_r(src,@properties["name"])
-    FileUtils.cd(@properties["name"])
-    f = File.new(PROPERTIES_FILE,"w")
-    f.print(@properties.to_yaml)
-    f.close
+    clone_dir = Dir.pwd + "/" + File.basename(src)
+    
+    if clone_dir == File.absolute_path(src) then
+      ## Cannot create teh clone in the same place as the original.
+      
+      return false
+    else
+      ## Create a copy of the repository and mark it as a clone in the properties.
+      self.load_properties(src)
+      @properties["remote"] = File.absolute_path(src)
+      @properties["clone"] = true
+      FileUtils.cp_r(src,@properties["name"])
+      FileUtils.cd(@properties["name"])
+      f = File.new(PROPERTIES_FILE,"w")
+      f.print(@properties.to_yaml)
+      f.close
+      
+      return true
+    end
   end
   
   def add(items)
@@ -100,7 +111,7 @@ class Kure
       end
     end
     
-    self.save_pending 
+    self.save_pending
     self.save_status
 
     return true
