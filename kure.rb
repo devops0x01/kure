@@ -72,7 +72,7 @@ class Kure
     clone_dir = Dir.pwd + "/" + File.basename(src)
     
     if clone_dir == File.absolute_path(src) then
-      ## Cannot create teh clone in the same place as the original.
+      ## Cannot create the clone in the same place as the original.
       
       return false
     else
@@ -96,7 +96,6 @@ class Kure
       if @status.has_key?(i) then
           # TODO: add delete and move to pending here
           c = @status[i]
-          @status.delete(i)
           @pending[i] = c
           @status.delete(i)
       else
