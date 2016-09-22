@@ -156,7 +156,17 @@ class Kure
       ##
       if @pending[f].action == "add" then
         puts "adding: <#{f}>"
-        FileUtils.copy(f,"#{REPOSITORY_STAGING_DIR}/#{f}")
+        if File.file?(f) then
+          dirname = File.dirname(f)
+          if dirname != "" then
+            ## this file is located in a directory so add the
+            ## directories before trying to copy the file to staging
+            FileUtils.mkdir_p("#{REPOSITORY_STAGING_DIR}/#{dirname}")
+          end
+          FileUtils.copy(f,"#{REPOSITORY_STAGING_DIR}/#{f}")
+        else
+          FileUtils.copy_entry(f,"#{REPOSITORY_STAGING_DIR}/#{f}")
+        end
       elsif @pending[f].action == "delete" then
         puts "removing: <#{f}>"
         @image.delete(f)
@@ -179,6 +189,12 @@ class Kure
 
     @pending.keys.each do |f|
       if @pending[f].action == "add" then
+          dirname = File.dirname(f)
+          if dirname != "" then
+            ## this file is located in a directory so add the
+            ## directories before trying to copy the file to data
+            FileUtils.mkdir_p("#{current_version_dir}/data/#{dirname}")
+          end
       FileUtils.mv("#{REPOSITORY_STAGING_DIR}/#{f}","#{current_version_dir}/data/#{f}")
       elsif @pending[f].action == "move" then
       newName = @pending[f].parameters[1]
@@ -215,11 +231,21 @@ class Kure
     image = YAML.load(File.read("#{REPOSITORY_VERSIONS_DIR}/#{version}/image.yaml"))
     if items == nil then
       image.keys.each do |k|
-        FileUtils.cp("#{REPOSITORY_VERSIONS_DIR}/#{image[k].to_s}/data/#{k}",k)
+        item = "#{REPOSITORY_VERSIONS_DIR}/#{image[k].to_s}/data/#{k}"
+        if File.file?(item) then
+          FileUtils.cp(item,k)
+        else
+          FileUtils.copy_entry(item,k)
+        end
       end
     else
       items.each do |i|
-        FileUtils.cp("#{REPOSITORY_VERSIONS_DIR}/#{image[i]}/data/#{i}",i)
+        item = "#{REPOSITORY_VERSIONS_DIR}/#{image[i]}/data/#{i}"
+        if File.file?(item) then
+          FileUtils.cp(item,i)
+        else
+          FileUtils.copy_entry(item,i)
+        end
       end
     end
   end
