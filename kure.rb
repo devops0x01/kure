@@ -189,16 +189,16 @@ class Kure
 
     @pending.keys.each do |f|
       if @pending[f].action == "add" then
-          dirname = File.dirname(f)
-          if dirname != "" then
-            ## this file is located in a directory so add the
-            ## directories before trying to copy the file to data
-            FileUtils.mkdir_p("#{current_version_dir}/data/#{dirname}")
-          end
-      FileUtils.mv("#{REPOSITORY_STAGING_DIR}/#{f}","#{current_version_dir}/data/#{f}")
+        dirname = File.dirname(f)
+        if dirname != "" then
+          ## this file is located in a directory so add the
+          ## directories before trying to copy the file to data
+          FileUtils.mkdir_p("#{current_version_dir}/data/#{dirname}")
+        end
+        FileUtils.mv("#{REPOSITORY_STAGING_DIR}/#{f}","#{current_version_dir}/data/#{f}")
       elsif @pending[f].action == "move" then
-      newName = @pending[f].parameters[1]
-      FileUtils.mv("#{REPOSITORY_STAGING_DIR}/#{newName}","#{current_version_dir}/data/#{newName}")
+        newName = @pending[f].parameters[1]
+        FileUtils.mv("#{REPOSITORY_STAGING_DIR}/#{newName}","#{current_version_dir}/data/#{newName}")
       end
     end
 
@@ -334,7 +334,11 @@ class Kure
     entries.delete("..")
     entries.delete(".")
     entries.each do |e|
-      FileUtils.rm("#{REPOSITORY_STAGING_DIR}/#{e}")
+      if File.file?(e) then
+        FileUtils.rm("#{REPOSITORY_STAGING_DIR}/#{e}")
+      else
+        FileUtils.rm_rf("#{REPOSITORY_STAGING_DIR}/#{e}")
+      end
     end
   end
   
