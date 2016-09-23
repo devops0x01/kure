@@ -156,13 +156,8 @@ class Kure
       ##
       if @pending[f].action == "add" then
         puts "adding: <#{f}>"
+        create_missing_dirs(f,REPOSITORY_STAGING_DIR)
         if File.file?(f) then
-          dirname = File.dirname(f)
-          if dirname != "" then
-            ## this file is located in a directory so add the
-            ## directories before trying to copy the file to staging
-            FileUtils.mkdir_p("#{REPOSITORY_STAGING_DIR}/#{dirname}")
-          end
           FileUtils.copy(f,"#{REPOSITORY_STAGING_DIR}/#{f}")
         else
           FileUtils.copy_entry(f,"#{REPOSITORY_STAGING_DIR}/#{f}")
@@ -236,10 +231,13 @@ class Kure
 
   def get(version=@last_version,items=nil)
     # TODO: handle bad version number some how...
+    # TODO: bandaided this to create dirs if they are missing, but then it
+    #       wastes time recopying the same dir again when it gets to it in the list
     image = YAML.load(File.read("#{REPOSITORY_VERSIONS_DIR}/#{version}/image.yaml"))
     if items == nil then
       image.keys.each do |k|
         item = "#{REPOSITORY_VERSIONS_DIR}/#{image[k].to_s}/data/#{k}"
+        create_missing_dirs(k)
         if File.file?(item) then
           FileUtils.cp(item,k)
         else
@@ -249,10 +247,11 @@ class Kure
     else
       items.each do |i|
         item = "#{REPOSITORY_VERSIONS_DIR}/#{image[i]}/data/#{i}"
+        create_missing_dirs(item,i)
         if File.file?(item) then
           FileUtils.cp(item,i)
         else
-          FileUtils.copy_entry(item,i)
+          FileUtils.copy_entry(i)
         end
       end
     end
@@ -364,4 +363,17 @@ class Kure
     f.close
   end
 
+  def create_missing_dirs(file,dir='.')
+    dirname = File.dirname(file)
+    puts "creating dirs: #{dirname}"
+    if dirname != "" then
+      ## this file is located in a directory so add the
+      ## directories before trying to copy the file to staging
+      FileUtils.mkdir_p("#{dir}/#{dirname}")
+    end
+  end
 end
+
+
+
+
