@@ -15,7 +15,7 @@ class Kure
   LAST_VERSION_FILE = "#{REPOSITORY_DIR}/last_version"
 
   attr_reader :pending,:status
-  
+
 
   def initialize(path=".")
     if Dir.exists?(REPOSITORY_DIR) then
@@ -27,7 +27,7 @@ class Kure
       @pending = YAML.load(File.read(PENDING_FILE))
     end
   end
-  
+
   ## Create a new repository in .kure if it doesn't exist.
   ## If it already exists, return an error
   def create(name)
@@ -42,24 +42,24 @@ class Kure
       Dir.mkdir("#{name}/#{REPOSITORY_DIR}")
       Dir.mkdir("#{name}/#{REPOSITORY_VERSIONS_DIR}")
       Dir.mkdir("#{name}/#{REPOSITORY_STAGING_DIR}")
-    
+
       f = File.new("#{name}/#{PENDING_FILE}","w")
       f.print(@pending.to_yaml)
       f.close
-    
+
       f = File.new("#{name}/#{STATUS_FILE}","w")
       f.print(@status.to_yaml)
       f.close
-    
+
       @last_version = -1
       f = File.new("#{name}/#{LAST_VERSION_FILE}","w")
       f.print(@last_version)
       f.close
-    
+
       @properties["name"]   = name
       @properties["remote"] = nil
       @properties["clone"]  = false
-        
+
       f = File.new("#{name}/#{PROPERTIES_FILE}","w")
       f.print(@properties.to_yaml)
       f.close
@@ -70,10 +70,10 @@ class Kure
 
   def clone(src)
     clone_dir = Dir.pwd + "/" + File.basename(src)
-    
+
     if clone_dir == File.absolute_path(src) then
       ## Cannot create the clone in the same place as the original.
-      
+
       return false
     else
       ## Create a copy of the repository and mark it as a clone in the properties.
@@ -85,11 +85,11 @@ class Kure
       f = File.new(PROPERTIES_FILE,"w")
       f.print(@properties.to_yaml)
       f.close
-      
+
       return true
     end
   end
-  
+
   def add(items)
     ## Add the indicated items to the repository's pending list
     items.each do |i|
@@ -109,23 +109,23 @@ class Kure
         end
       end
     end
-    
+
     self.save_pending
     self.save_status
 
     return true
   end
-  
+
   def commit(message="")
     ## TODO: compare files so that files which match the last version
     ##       are only committed if confirmed - or follow gits method and
     ##       only make modified files available for check in...
-  
+
     ## Foreach pending file rename the existing copy in data
     ## and then copy in the new one. This is an extremely inefficient
     ## method for versioning files and is only a place holder at this time.
     ## A better method is planned for a future iteration.
-    
+
     ## First copy each file to a staging directory.
     ## If a file is missing, error out and delete the staged files
     ## then return false. This makes for an easy roll back.
@@ -187,16 +187,24 @@ class Kure
     Dir.mkdir(current_version_dir)
     Dir.mkdir("#{current_version_dir}/data")
 
+    entries = Dir.entries("#{REPOSITORY_STAGING_DIR}")
+    entries.delete('.')
+    entries.delete('..')
+    entries.each do |i|
+      FileUtils.mv("#{REPOSITORY_STAGING_DIR}/#{i}","#{current_version_dir}/data/#{i}")
+    end
+
     @pending.keys.each do |f|
-      if @pending[f].action == "add" then
-        dirname = File.dirname(f)
-        if dirname != "" then
-          ## this file is located in a directory so add the
-          ## directories before trying to copy the file to data
-          FileUtils.mkdir_p("#{current_version_dir}/data/#{dirname}")
-        end
-        FileUtils.mv("#{REPOSITORY_STAGING_DIR}/#{f}","#{current_version_dir}/data/#{f}")
-      elsif @pending[f].action == "move" then
+     # if @pending[f].action == "add" then
+     #   dirname = File.dirname(f)
+     #   if dirname != "" then
+     #     ## this file is located in a directory so add the
+     #     ## directories before trying to copy the file to data
+     #     FileUtils.mkdir_p("#{current_version_dir}/data/#{dirname}")
+     #   end
+     #   FileUtils.mv("#{REPOSITORY_STAGING_DIR}/#{f}","#{current_version_dir}/data/#{f}")
+     # elsif @pending[f].action == "move" then
+      if @pending[f].action == "move" then
         newName = @pending[f].parameters[1]
         FileUtils.mv("#{REPOSITORY_STAGING_DIR}/#{newName}","#{current_version_dir}/data/#{newName}")
       end
@@ -208,9 +216,9 @@ class Kure
         @image[f] = @last_version + 1
       end
     end
-      
+
     self.save_image
-      
+
     @last_version += 1
     self.save_version
 
@@ -249,7 +257,7 @@ class Kure
       end
     end
   end
-  
+
   def delete(items)
     items.each do |i|
       FileUtils.rm(i)
@@ -260,7 +268,7 @@ class Kure
     end
     self.save_status()
   end
-  
+
   def move(src,dest)
     c = Change.new
     c.action = "move"
@@ -269,7 +277,7 @@ class Kure
     @status[src] = c
     self.save_status
   end
-  
+
   def get_log(version=@last_version)
     return YAML.load(File.read("#{REPOSITORY_VERSIONS_DIR}/#{version}/log"))
   end
@@ -293,7 +301,7 @@ class Kure
   def load_properties(path)
     @properties = YAML.load(File.read(path + "/" +  PROPERTIES_FILE))
   end
- 
+
   def load_status()
     @status = YAML.load(File.read(STATUS_FILE))
   end
@@ -310,25 +318,25 @@ class Kure
     f.print(@pending.to_yaml)
     f.close
   end
-  
+
   def save_pending()
     f = File.open(PENDING_FILE,"w")
     f.print(@pending.to_yaml)
     f.close()
   end
-  
+
   def save_version()
     f = File.open(LAST_VERSION_FILE,"w")
     f.print(@last_version)
     f.close
   end
-  
+
   def save_image()
     f = File.new("#{REPOSITORY_VERSIONS_DIR}/#{@last_version + 1}/image.yaml","w")
     f.print(@image.to_yaml)
     f.close
   end
-  
+
   def clear_staging_dir()
     entries = Dir.entries(REPOSITORY_STAGING_DIR)
     entries.delete("..")
@@ -341,7 +349,7 @@ class Kure
       end
     end
   end
-  
+
   def log_entry(message)
     @log = LogEntry.new
     @log.version = @last_version
@@ -349,7 +357,7 @@ class Kure
     @log.commit_message = message
     @log.file_list = @pending
   end
-  
+
   def save_log()
     f = File.open("#{REPOSITORY_VERSIONS_DIR}/#{@last_version}/log","w")
     f.print(@log.to_yaml)
