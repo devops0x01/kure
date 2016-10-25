@@ -13,13 +13,6 @@ while count < ARGV.size do
   ## the command line syntax for this option is as follows:
   ## kure create <name>
   
-  ## the directory structure for the repository is initialized as follows:
-  ##  .kure
-  ##    |_file meta data organized by relative path
-  ##    |_logged data - commit time, message, diff, file list, cksum, commit id
-  ##    |_paths containing the actual file data with versioned names
- 
-
     $kure.create(ARGV[count+1])
 
     break
@@ -36,8 +29,12 @@ while count < ARGV.size do
     break
   ## clone a repository subordinate to the original
   elsif ARGV[count] == "clone" then
-    $kure.clone(ARGV[count+1])
- 
+    if ARGV[count+2] then
+      $kure.clone(ARGV[count+1],ARGV[count+2])
+    else
+      $kure.clone(ARGV[count+1])
+    end
+
     break
   ## commit items to the repository
   elsif ARGV[count] == "commit" then

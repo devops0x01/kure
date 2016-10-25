@@ -68,20 +68,24 @@ class Kure
     end
   end
 
-  def clone(src)
+  def clone(src,dest='')
     clone_dir = Dir.pwd + "/" + File.basename(src)
+    src_abs = File.absolute_path(src)
 
-    if clone_dir == File.absolute_path(src) then
+    if clone_dir == src_abs then
       ## Cannot create the clone in the same place as the original.
 
       return false
     else
       ## Create a copy of the repository and mark it as a clone in the properties.
       self.load_properties(src)
-      @properties["remote"] = File.absolute_path(src)
+      @properties["remote"] = src_abs
       @properties["clone"] = true
-      FileUtils.cp_r(src,@properties["name"])
-      FileUtils.cd(@properties["name"])
+      if dest == '' then
+        dest = @properties["name"]
+      end
+      FileUtils.cp_r(src,dest)
+      FileUtils.cd(dest)
       f = File.new(PROPERTIES_FILE,"w")
       f.print(@properties.to_yaml)
       f.close
