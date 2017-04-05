@@ -291,12 +291,19 @@ class Kure
     end
     @image.each do |k,v|
       unless File.exists?(k) then
+        #TODO: need to go see how I am handling deletes...
         puts "deleted: " + k.to_s
       else
         unless File.size(k) == File.size("#{REPOSITORY_VERSIONS_DIR}/#{v}/data/" + k) then
-          puts "file: " + k + " does not match repository version: " + "#{REPOSITORY_VERSIONS_DIR}/#{v}/data/" + k
+          puts "changed: " + k
         end
       end
+      #next, get a recursive listing of all files in the working directory
+      #and check if they are in the repository. If not, they must be new.
+      
+      
+      
+      
     end
     ## notes:
 
