@@ -286,7 +286,18 @@ class Kure
   end
 
   def get_status
-
+    unless @last_version == -1 then
+      @image = YAML.load(File.read("#{REPOSITORY_VERSIONS_DIR}/#{@last_version}/image.yaml"))
+    end
+    @image.each do |k,v|
+      unless File.exists?(k) then
+        puts "deleted: " + k.to_s
+      else
+        unless File.size(k) == File.size("#{REPOSITORY_VERSIONS_DIR}/#{v}/data/" + k) then
+          puts "file: " + k + " does not match repository version: " + "#{REPOSITORY_VERSIONS_DIR}/#{v}/data/" + k
+        end
+      end
+    end
     ## notes:
 
     ##require "digest"

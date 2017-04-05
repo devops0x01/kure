@@ -79,6 +79,8 @@ while count < ARGV.size do
     puts "PENDING:"
     puts $kure.pending
     puts;puts
+    $kure.get_status
+    puts;puts
     
 	break
   elsif ARGV[count] == "clear" then
