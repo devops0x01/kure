@@ -3,6 +3,9 @@ require "yaml"
 require File.dirname(__FILE__) + "/log_entry.rb"
 require File.dirname(__FILE__) + "/change.rb"
 
+require "digest/md5"
+
+
 ## Versioning commands are implemented here.
 class Kure
   REPOSITORY_DIR          = ".kure"
@@ -294,29 +297,26 @@ class Kure
         #TODO: need to go see how I am handling deletes...
         puts "deleted: " + k.to_s
       else
-        unless File.size(k) == File.size("#{REPOSITORY_VERSIONS_DIR}/#{v}/data/" + k) then
-          puts "changed: " + k
+        if File.file?(k) then
+          unless File.size(k) == File.size("#{REPOSITORY_VERSIONS_DIR}/#{v}/data/" + k) then
+            puts "changed: " + k
+          else
+            if Digest::MD5.hexdigest(File.read(k)) !=
+               Digest::MD5.hexdigest(File.read("#{REPOSITORY_VERSIONS_DIR}/#{v}/data/" + k)) then
+              puts "changed: " + k
+            end
+          end
         end
       end
+      ## check for new files
       #next, get a recursive listing of all files in the working directory
       #and check if they are in the repository. If not, they must be new.
       
-      
-      
-      
+    
+    
+    
+    
     end
-    ## notes:
-
-    ##require "digest"
-    ##require "digest/md5"
-    ##Digest::MD5.hexdigest
-    ##Digest::SHA2.hexdigest
-
-
-    ## read in status file data
-    ## check for file modifications
-    ## check for unknown files
-    ## check for missing files
   end
 
   def load_properties(path)
