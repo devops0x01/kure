@@ -308,14 +308,14 @@ class Kure
           end
         end
       end
-      ## check for new files
-      #next, get a recursive listing of all files in the working directory
-      #and check if they are in the repository. If not, they must be new.
-      
-    
-    
-    
-    
+    end
+    ## check for new files
+    #next, get a recursive listing of all files in the working directory
+    #and check if they are in the repository. If not, they must be new.
+    (Dir['**/*'].reject {|f|File.directory?(f)}).each do |p|
+      unless @image.has_key?(p) then
+        puts "new: " + p
+      end
     end
   end
 
