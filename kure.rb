@@ -318,6 +318,10 @@ class Kure
       end
     end
   end
+  
+  def get_current_version()
+    return @last_version
+  end
 
   def load_properties(path)
     @properties = YAML.load(File.read(path + "/" +  PROPERTIES_FILE))

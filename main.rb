@@ -91,6 +91,10 @@ while count < ARGV.size do
     $kure.clear_pending
 	
 	break
+  elsif ARGV[count] == "version" || ARGV[count] == "v" then
+    puts $kure.get_current_version
+    puts;puts
+  break
   end
   
   count += 1
