@@ -63,7 +63,11 @@ while count < ARGV.size do
     break
   ## retreive log information
   elsif ARGV[count] == "log" then
-    log_entry = $kure.get_log(ARGV[count+1])
+    if ARGV[count+1] then
+      log_entry = $kure.get_log(ARGV[count+1])
+    else
+      log_entry = $kure.get_log()
+    end
     puts "Version: #{log_entry.version}"
     puts "Date_time: #{log_entry.date_time}"
     puts "Commit_message: #{log_entry.commit_message}"
