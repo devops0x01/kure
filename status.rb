@@ -31,6 +31,7 @@ module Kure
       #next, get a recursive listing of all files in the working directory
       #and check if they are in the repository. If not, they must be new.
       (Dir["#{@repository.path}/**/*"].reject {|f|File.directory?(f)}).each do |p|
+        ## TODO: fix bug in line below, need to compare the correct directory to image path
         unless @repository.image.has_key?(p) then
           puts "new: " + p
         end
