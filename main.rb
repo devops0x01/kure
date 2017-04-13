@@ -68,9 +68,9 @@ while count < ARGV.size do
     else
       log_entry = $kure.get_log()
     end
-    puts "Version: #{log_entry.version}"
+    puts "Version:   #{log_entry.version}"
     puts "Date_time: #{log_entry.date_time}"
-    puts "Commit_message: #{log_entry.commit_message}"
+    puts "Message:   #{log_entry.commit_message}"
     puts "File_list: #{log_entry.file_list}"
 
     break
@@ -94,6 +94,9 @@ while count < ARGV.size do
   elsif ARGV[count] == "version" || ARGV[count] == "v" then
     puts $kure.get_current_version
     puts;puts
+  break
+  elsif ARGV[count] == "diff" then
+    $kure.diff(ARGV[count+1])
   break
   end
   

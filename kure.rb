@@ -318,6 +318,46 @@ class Kure
       end
     end
   end
+
+  def diff(path)
+    results = []
+
+    wf = File.open(path,'r')
+    wf_lines = wf.readlines()
+    wf.close
+
+    @image = YAML.load(File.read("#{REPOSITORY_VERSIONS_DIR}/#{@last_version}/image.yaml"))
+    rf = File.open(REPOSITORY_VERSIONS_DIR + "/" + @image[path].to_s + "/data/" + path,'r')
+    rf_lines = rf.readlines()
+    rf.close
+
+    lines1 = nil
+    lines2 = nil
+    if rf_lines.size > wf_lines.size then
+      lines1 = rf_lines
+      lines2 = wf_lines
+    else
+      lines1 = wf_lines
+      lines2 = rf_lines
+    end
+
+    c = 0
+    lines1.each do |line|
+      if lines2[c] then
+        if line == lines2[c] then
+          puts line
+        else
+          puts "[1] " + line
+          puts "[2] " + lines2[c]
+        end
+      else
+        puts "_ " + line
+      end
+      c += 1
+    end
+
+    return results
+  end
   
   def get_current_version()
     return @last_version
