@@ -32,8 +32,9 @@ module Kure
       #and check if they are in the repository. If not, they must be new.
       (Dir["#{@repository.path}/**/*"].reject {|f|File.directory?(f)}).each do |p|
         ## TODO: fix bug in line below, need to compare the correct directory to image path
-        unless @repository.image.has_key?(p) then
-          puts "new: " + p
+        basename = File.basename(p)
+        unless @repository.image.has_key?(basename) then
+          puts "new: " + basename
         end
       end
     end #method: execute
