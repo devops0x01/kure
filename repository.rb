@@ -77,6 +77,13 @@ module Kure
       f.close
     end
 
+    def clear_status(path='.')
+      @status = Hash.new
+      f = File.open("#{path + '/' + @status_file}","w")
+      f.print(@status.to_yaml)
+      f.close
+    end
+
     def save_pending(path='.')
       f = File.open(path + '/' + @pending_file,"w")
       f.print(@pending.to_yaml)
@@ -116,14 +123,15 @@ module Kure
     end
 
     def clear_staging(path='.')
-      entries = Dir.entries(@staging_dir)
+      stage_path = path + "/" + @staging_dir
+      entries = Dir.entries(stage_path)
       entries.delete("..")
       entries.delete(".")
       entries.each do |e|
         if File.file?(e) then
-          FileUtils.rm("#{@staging_dir}/#{e}")
+          FileUtils.rm("#{stage_path}/#{e}")
         else
-          FileUtils.rm_rf("#{@staging_dir}/#{e}")
+          FileUtils.rm_rf("#{stage_path}/#{e}")
         end
       end 
     end

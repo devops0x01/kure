@@ -20,20 +20,26 @@ module Kure
       else
         ## Create a copy of the repository and mark it as a clone in the properties.
         new_repository = Repository.new(dest_abs)
+
         new_repository.properties[:remote] = src_abs
-        new_repository.properties[:clone] = true
-        new_repository.properties[:name] = @repository.properties[:name]
+        new_repository.properties[:clone]  = true
+        new_repository.properties[:name]   = @repository.properties[:name]
+
+        
+        FileUtils.cp_r(src_abs,dest_abs)
+        FileUtils.rm(Dir.glob(dest_abs + "/*"))
+
         new_repository.save_properties(new_repository.path)
 
-        FileUtils.cp_r(@repository.path,new_repository.path)
-        FileUtils.rm(new_repository.path + "/*")
-  
+        new_repository.clear_pending(new_repository.path)
+        new_repository.clear_status(new_repository.path)
+        new_repository.clear_staging(new_repository.path)
+ 
+        ## TODO: will need to put kure get command here once implemented
+ 
         return true
       end
     end #method: execute
   end #class: Add
 end #module: Kure
-
-
-
 
