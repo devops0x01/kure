@@ -8,7 +8,7 @@ module Kure
     attr_reader :base_dir, :versions_dir, :staging_dir,
                 :pending_file, :status_file, :properties_file,
                 :last_version_file, :last_version, :image,
-                :path
+                :path, :status, :pending, :properties
     def initialize(path=".")
       @base_dir     = ".kure"
       @versions_dir = @base_dir + '/versions'
@@ -36,8 +36,8 @@ module Kure
       end
     end
 
-    def save_properties()
-        f = File.new("#{@name}/#{@properties_file}","w")
+    def save_properties(path='.')
+        f = File.open(path + '/' + @properties_file,"w")
         f.print(@properties.to_yaml)
         f.close
     end
