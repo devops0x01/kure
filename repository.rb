@@ -120,8 +120,20 @@ module Kure
       else
         @image = Hash.new
       end
+      return @image
     end
 
+    def load_version(version,path='.')
+      unless @last_version == -1 then
+        File.open("#{path}/#{@versions_dir}/#{@last_version}/image.yaml","r") do |f|
+          @image = YAML.load(f.read())
+        end
+      else
+        @image = Hash.new
+      end
+      return @image
+    end
+    
     def clear_staging(path='.')
       stage_path = path + "/" + @staging_dir
       entries = Dir.entries(stage_path)
