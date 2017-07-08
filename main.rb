@@ -1,8 +1,16 @@
 require File.dirname(__FILE__) + "/kure.rb"
 
+require File.dirname(__FILE__) + "/create.rb"
+require File.dirname(__FILE__) + "/version.rb"
+require File.dirname(__FILE__) + "/status.rb"
+require File.dirname(__FILE__) + "/add.rb"
+require File.dirname(__FILE__) + "/clone.rb"
+
+include Kure
+
 ## program entry point, parses commandline arguments
 
-$kure = Kure.new
+$kure = KureOrig.new
 
 ## note: the code below is temporary. It will be replaced with something more fitting.
 
@@ -13,7 +21,9 @@ while count < ARGV.size do
   ## the command line syntax for this option is as follows:
   ## kure create <name>
   
-    $kure.create(ARGV[count+1])
+    #$kure.create(ARGV[count+1])
+    c = Create.new(Repository.new(),ARGV[count+1])
+    c.execute()
 
     break
   ## add items to list for future commit
@@ -24,7 +34,9 @@ while count < ARGV.size do
       list << ARGV[count]
       count += 1
     end
-    $kure.add(list)
+    #$kure.add(list)
+    c = Add.new(Repository.new(),list)
+    c.execute()
 
     break
   ## clone a repository subordinate to the original
@@ -77,13 +89,17 @@ while count < ARGV.size do
   ## retreive information about the state of the working directory
   elsif ARGV[count] == "status" || ARGV[count] == "s" then
     puts;puts
-    puts "STATUS:"
-    puts $kure.status
-    puts;puts
-    puts "PENDING:"
-    puts $kure.pending
-    puts;puts
-    $kure.get_status
+    #puts "STATUS:"
+    #puts $kure.status
+    #puts;puts
+    #puts "PENDING:"
+    #puts $kure.pending
+    #puts;puts
+    #$kure.get_status
+
+    c = Status.new(Repository.new('.'))
+    c.execute()
+
     puts;puts
     
 	break
@@ -92,7 +108,9 @@ while count < ARGV.size do
 	
 	break
   elsif ARGV[count] == "version" || ARGV[count] == "v" then
-    puts $kure.get_current_version
+    #puts $kure.get_current_version
+    c = Version.new(Repository.new('.'))
+    puts c.execute()
     puts;puts
   break
   elsif ARGV[count] == "diff" then

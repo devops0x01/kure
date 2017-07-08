@@ -7,7 +7,7 @@ require "digest/md5"
 
 
 ## Versioning commands are implemented here.
-class Kure
+class KureOrig
   REPOSITORY_DIR          = ".kure"
   REPOSITORY_VERSIONS_DIR = "#{REPOSITORY_DIR}/versions"
   REPOSITORY_STAGING_DIR  = "#{REPOSITORY_DIR}/staged"
