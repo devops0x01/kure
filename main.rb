@@ -40,11 +40,16 @@ while count < ARGV.size do
 
     break
   ## clone a repository subordinate to the original
+  ##   first argument is source repository directory
+  ##   second argument is destindation directory in 
+  ##     which to place the clone
   elsif ARGV[count] == "clone" then
     if ARGV[count+2] then
-      $kure.clone(ARGV[count+1],ARGV[count+2])
-    else
-      $kure.clone(ARGV[count+1])
+      #$kure.clone(ARGV[count+1],ARGV[count+2])
+      c = Clone.new(Repository.new(ARGV[count+1]),ARGV[count+2])
+      c.execute()
+    #else
+      #$kure.clone(ARGV[count+1])
     end
 
     break
