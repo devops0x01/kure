@@ -12,7 +12,7 @@ module Kure
       @repository.image.each do |k,v|
         unless File.exists?(@repository.path + '/' + k) then
           #TODO: need to go see how I am handling deletes...
-          puts "deleted: " + @prepository.path + '/' + k.to_s
+          puts "deleted: " + @repository.path + '/' + k.to_s
         else
           if File.file?(@repository.path + '/' + k) then
             unless File.size(@repository.path + '/' + k) == 
@@ -20,7 +20,10 @@ module Kure
               puts "changed: " + @repository.path + '/' + k
             else
               if Digest::MD5.hexdigest(File.read(@repository.path + '/' + k)) !=
-                 Digest::MD5.hexdigest(File.read("#{@repository.path}/#{@repository.versions_dir}/#{v}/data/" + k)) then
+                 Digest::MD5.hexdigest(
+                     File.read("#{@repository.path}/#{@repository.versions_dir}/#{v}/data/" + k))
+              then
+
                 puts "changed: " +@repository.path + '/' +  k
               end
             end

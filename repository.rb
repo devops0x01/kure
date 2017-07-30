@@ -125,7 +125,8 @@ module Kure
 
     def load_version(version,path='.')
       unless @last_version == -1 then
-        File.open("#{path}/#{@versions_dir}/#{@last_version}/image.yaml","r") do |f|
+#        File.open("#{path}/#{@versions_dir}/#{@last_version}/image.yaml","r") do |f|
+        File.open("#{path}/#{@versions_dir}/#{version}/image.yaml","r") do |f|
           @image = YAML.load(f.read())
         end
       else

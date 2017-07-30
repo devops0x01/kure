@@ -4,6 +4,7 @@ require File.dirname(__FILE__) + "/create.rb"
 require File.dirname(__FILE__) + "/version.rb"
 require File.dirname(__FILE__) + "/status.rb"
 require File.dirname(__FILE__) + "/add.rb"
+require File.dirname(__FILE__) + "/get.rb"
 require File.dirname(__FILE__) + "/clone.rb"
 
 include Kure
@@ -55,18 +56,18 @@ while count < ARGV.size do
     break
   ## commit items to the repository
   elsif ARGV[count] == "commit" then
-	if ARGV[count+1] then
+    if ARGV[count+1] then
       $kure.commit(ARGV[count+1])
-	else
-	  $kure.commit
-	end
-    
-	break
+    else
+      $kure.commit
+    end
+    break
   ## get items from the repository
   elsif ARGV[count] == "get" || ARGV[count] == "g" then
-    $kure.get(ARGV[count+1])
-    
-	break
+   # $kure.get(ARGV[count+1])
+    c = Get.new(Repository.new(),ARGV[count+1])
+    c.execute() 
+    break
   ## delete items from the repository
   elsif ARGV[count] == "delete" || ARGV[count] == "rm" || ARGV[count] == "del"then
     # TODO: add deletion of multiple items

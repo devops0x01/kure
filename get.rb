@@ -19,10 +19,11 @@ module Kure
     end
 
     def execute()
-      # TODO: handle bad version number some how...
+      # TODO: need to handle bad version numbers
       # TODO: bandaided this to create dirs if they are missing, but then it
       #       wastes time recopying the same dir again when it gets to it in the list
       image = @repository.load_version(@version,File.absolute_path(@repository.path))
+      puts image
       image.keys.each do |k|
         path = File.absolute_path(@repository.path)
         item = "#{path}/#{@repository.versions_dir}/#{image[k].to_s}/data/#{k}"
