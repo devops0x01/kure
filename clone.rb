@@ -11,9 +11,13 @@ module Kure
     end
 
     def execute()
-      dest_abs = File.absolute_path(@dest + @repository.properties[:name])
-      src_abs = File.absolute_path(@repository.path)
-  
+      if @dest[-1] == '/' || @dest[-1] == '\\' then
+        dest_abs = File.absolute_path(@dest + @repository.properties[:name])
+        src_abs = File.absolute_path(@repository.path)
+      else
+        raise 'now slash on destination'
+      end
+    
       if dest_abs == src_abs then
         ## Cannot create the clone in the same place as the original.
         return false
